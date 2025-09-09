@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(USER)
+  avatar    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  segments  Segment[]
+  campaigns Campaign[]
+
+  @@map("users")
+}
+
+model Customer {
+  id          BigInt   @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  phone       String?
+  totalSpend  Decimal  @default(0) @db.Decimal(12, 2)
+  lastActive  DateTime?
+  visitsCount Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  orders           Order[]
+  communicationLog CommunicationLog[]
+
+  @@map("customers")
+}
+
+model Order {
+  id         BigInt   @id @default(autoincrement())
+  customerId BigInt
+  amount     Decimal  @db.Decimal(12, 2)
+  orderDate  DateTime @default(now())
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("orders")
+}
+
+model Segment {
+  id         BigInt   @id @default(autoincrement())
+  name       String
+  rulesJson  Json
+  createdBy  String
+  createdAt  DateTime @default(now())
+
+  // Relations
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaigns Campaign[]
+
+  @@map("segments")
+}
+
+model Campaign {
+  id              BigInt    @id @default(autoincrement())
+  segmentId       BigInt?
+  name            String
+  messageTemplate String?
+  scheduledAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segment          Segment?         @relation(fields: [segmentId], references: [id], onDelete: SetNull)
+  communicationLog CommunicationLog[]
+
+  @@map("campaigns")
+}
+
+model CommunicationLog {
+  id               BigInt           @id @default(autoincrement())
+  campaignId       BigInt
+  customerId       BigInt
+  message          String?
+  status           CommunicationStatus @default(PENDING)
+  attempts         Int              @default(0)
+  lastAttemptAt    DateTime?
+  deliveryReceipt  Json?
+  createdAt        DateTime         @default(now())
+
+  // Relations
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("communication_log")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum CommunicationStatus {
+  PENDING
+  SENT
+  FAILED
+}
