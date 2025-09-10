@@ -6,6 +6,68 @@ const app = express();
 const PORT = 3001;
 const prisma = new PrismaClient();
 
+class MockRedisWorker {
+  constructor() {
+    console.log('Mock Redis Worker started');
+  }
+
+  async addJob(jobData) {
+    const jobId = Date.now().toString();
+    console.log(`Job ${jobId} added to queue:`, jobData);
+    
+    setTimeout(() => this.processJob(jobId, jobData), 100);
+    
+    return { id: jobId };
+  }
+
+  async processJob(jobId, jobData) {
+    try {
+      console.log(`Processing job ${jobId}:`, jobData);
+      
+      const { name, email, phone, total_spend, last_active, visits_count } = jobData;
+      
+      const existing = await prisma.customer.findUnique({ 
+        where: { email } 
+      });
+      
+      if (existing) {
+        const updatedCustomer = await prisma.customer.update({
+          where: { id: existing.id },
+          data: {
+            name,
+            phone: phone || existing.phone,
+            totalSpend: total_spend ?? existing.totalSpend,
+            lastActive: last_active ? new Date(last_active) : existing.lastActive,
+            visitsCount: (existing.visitsCount || 0) + (visits_count || 1),
+          },
+        });
+        
+        console.log(`Updated existing customer: ${updatedCustomer.email}`);
+        return updatedCustomer;
+      } else {
+        const newCustomer = await prisma.customer.create({
+          data: {
+            name,
+            email,
+            phone: phone || null,
+            totalSpend: total_spend || 0,
+            lastActive: last_active ? new Date(last_active) : null,
+            visitsCount: visits_count || 0,
+          },
+        });
+        
+        console.log(`Created new customer: ${newCustomer.email}`);
+        return newCustomer;
+      }
+    } catch (error) {
+      console.error(`Error processing customer ${jobData.email}:`, error);
+      throw error;
+    }
+  }
+}
+
+const mockWorker = new MockRedisWorker();
+
 app.use(cors());
 app.use(express.json());
 
@@ -111,45 +173,22 @@ app.post('/api/customers', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
     
-    const customer = await prisma.customer.upsert({
-      where: { email },
-      update: {
-        name,
-        phone: phone || undefined,
-        totalSpend: total_spend || 0,
-        lastActive: last_active ? new Date(last_active) : undefined,
-        visitsCount: visits_count || 0,
-      },
-      create: {
-        name,
-        email,
-        phone: phone || null,
-        totalSpend: total_spend || 0,
-        lastActive: last_active ? new Date(last_active) : null,
-        visitsCount: visits_count || 0,
-      }
+    const job = await mockWorker.addJob({
+      name,
+      email,
+      phone,
+      total_spend,
+      last_active,
+      visits_count
     });
     
-    res.status(201).json({
-      message: 'Customer processed successfully',
-      customer: {
-        id: customer.id,
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-        totalSpend: customer.totalSpend,
-        lastActive: customer.lastActive,
-        visitsCount: customer.visitsCount,
-        createdAt: customer.createdAt
-      }
+    res.status(202).json({
+      message: 'Customer queued for ingestion',
+      jobId: job.id
     });
   } catch (error) {
     console.error('Create customer error:', error);
-    if (error.code === 'P2002') {
-      res.status(400).json({ error: 'Customer with this email already exists' });
-    } else {
-      res.status(500).json({ error: 'Internal server error' });
-    }
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -240,7 +279,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Test Server running on port ${PORT}`);
+  console.log(`Mock Redis Server running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`API Base URL: http://localhost:${PORT}/api`);
 });

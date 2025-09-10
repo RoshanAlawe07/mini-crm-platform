@@ -1,26 +1,69 @@
-const express = require('express');
-const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
+import { Queue } from 'bullmq';
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 const prisma = new PrismaClient();
 
-app.use(cors());
-app.use(express.json());
+// Redis connection
+const redisConnection = {
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  password: process.env.REDIS_PASSWORD,
+};
 
+// Create queues
+const customerQueue = new Queue('ingest-customers', { connection: redisConnection });
+
+// Security middleware
+app.use(helmet());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Compression middleware
+app.use(compression());
+
+// Logging middleware
+app.use(morgan('combined'));
+
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
+  res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
 });
 
+// Auth routes
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password, name } = req.body;
     
+    // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
@@ -29,10 +72,11 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'User already exists' });
     }
     
+    // Create user (simple password for testing)
     const user = await prisma.user.create({
       data: {
         email,
-        password: password,
+        password: password, // In real app, hash this
         name
       },
       select: {
@@ -44,14 +88,14 @@ app.post('/api/auth/register', async (req, res) => {
       }
     });
     
-    res.status(201).json({
+    return res.status(201).json({
       message: 'User created successfully',
       user,
       token: 'test-token-' + user.id
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -67,7 +111,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    res.json({
+    return res.json({
       message: 'Login successful',
       user: {
         id: user.id,
@@ -79,30 +123,33 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.get('/api/auth/profile', (req, res) => {
+  // Simple auth check
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Access denied' });
   }
   
-  res.json({
+  return res.json({
     user: {
       id: 'test-user-id',
-      email: 'roshan@example.com',
-      name: 'Roshan Kumar',
+      email: 'test@example.com',
+      name: 'Test User',
       role: 'USER'
     }
   });
 });
 
+// Customer routes with queue
 app.post('/api/customers', async (req, res) => {
   try {
     const { name, email, phone, total_spend, last_active, visits_count } = req.body;
     
+    // Basic validation
     if (!name || !email) {
       return res.status(400).json({ error: 'Name and email are required' });
     }
@@ -111,45 +158,23 @@ app.post('/api/customers', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
     
-    const customer = await prisma.customer.upsert({
-      where: { email },
-      update: {
-        name,
-        phone: phone || undefined,
-        totalSpend: total_spend || 0,
-        lastActive: last_active ? new Date(last_active) : undefined,
-        visitsCount: visits_count || 0,
-      },
-      create: {
-        name,
-        email,
-        phone: phone || null,
-        totalSpend: total_spend || 0,
-        lastActive: last_active ? new Date(last_active) : null,
-        visitsCount: visits_count || 0,
-      }
+    // Add job to queue
+    const job = await customerQueue.add('create', {
+      name,
+      email,
+      phone,
+      total_spend,
+      last_active,
+      visits_count
     });
     
-    res.status(201).json({
-      message: 'Customer processed successfully',
-      customer: {
-        id: customer.id,
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-        totalSpend: customer.totalSpend,
-        lastActive: customer.lastActive,
-        visitsCount: customer.visitsCount,
-        createdAt: customer.createdAt
-      }
+    return res.status(202).json({
+      message: 'Customer queued for ingestion',
+      jobId: job.id
     });
   } catch (error) {
     console.error('Create customer error:', error);
-    if (error.code === 'P2002') {
-      res.status(400).json({ error: 'Customer with this email already exists' });
-    } else {
-      res.status(500).json({ error: 'Internal server error' });
-    }
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -167,33 +192,35 @@ app.get('/api/customers', async (req, res) => {
       sort_order = 'desc'
     } = req.query;
 
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
     const skip = (pageNum - 1) * limitNum;
 
-    const where = {};
+    // Build where clause
+    const where: any = {};
 
     if (spend_gt) {
-      where.totalSpend = { ...where.totalSpend, gte: parseFloat(spend_gt) };
+      where.totalSpend = { ...where.totalSpend, gte: parseFloat(spend_gt as string) };
     }
     if (spend_lt) {
-      where.totalSpend = { ...where.totalSpend, lte: parseFloat(spend_lt) };
+      where.totalSpend = { ...where.totalSpend, lte: parseFloat(spend_lt as string) };
     }
     if (visits_gt) {
-      where.visitsCount = { ...where.visitsCount, gte: parseInt(visits_gt) };
+      where.visitsCount = { ...where.visitsCount, gte: parseInt(visits_gt as string) };
     }
     if (visits_lt) {
-      where.visitsCount = { ...where.visitsCount, lte: parseInt(visits_lt) };
+      where.visitsCount = { ...where.visitsCount, lte: parseInt(visits_lt as string) };
     }
     if (search) {
       where.OR = [
-        { name: { contains: search } },
-        { email: { contains: search } }
+        { name: { contains: search as string } },
+        { email: { contains: search as string } }
       ];
     }
 
-    const orderBy = {};
-    orderBy[sort_by] = sort_order;
+    // Build orderBy
+    const orderBy: any = {};
+    orderBy[sort_by as string] = sort_order as string;
 
     const [customers, total] = await Promise.all([
       prisma.customer.findMany({
@@ -224,6 +251,7 @@ app.get('/api/customers', async (req, res) => {
   }
 });
 
+// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ 
     error: 'Route not found',
@@ -231,7 +259,8 @@ app.use('*', (req, res) => {
   });
 });
 
-app.use((err, req, res, next) => {
+// Error handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ 
     error: 'Something went wrong!',
@@ -240,7 +269,10 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Test Server running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`API Base URL: http://localhost:${PORT}/api`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+  console.log(`⚡ Queue system: Redis + BullMQ`);
 });
+
+export default app;

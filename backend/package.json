@@ -5,8 +5,11 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
+    "dev:redis": "nodemon src/index-with-redis.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "worker": "ts-node src/workers/customerWorker.ts",
+    "worker:dev": "nodemon --exec ts-node src/workers/customerWorker.ts",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
