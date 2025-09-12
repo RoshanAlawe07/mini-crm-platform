@@ -15,3 +15,52 @@ export const orderSchema = z.object({
   amount: z.number().min(1),
   order_date: z.string().datetime().optional(),
 });
+
+// Rules format validation schemas
+export const ruleOperatorSchema = z.enum([
+  "=", "!=", ">", ">=", "<", "<=", 
+  "contains", "not_contains", 
+  "starts_with", "ends_with",
+  "in", "not_in"
+]);
+
+export const ruleFieldSchema = z.enum([
+  "total_spend", "visits_count", "last_active", 
+  "name", "email", "phone", "created_at"
+]);
+
+export const singleRuleSchema = z.object({
+  field: ruleFieldSchema,
+  operator: ruleOperatorSchema,
+  value: z.union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))])
+});
+
+export const rulesGroupSchema: z.ZodType<any> = z.lazy(() => 
+  z.object({
+    op: z.enum(["AND", "OR"]),
+    rules: z.array(z.union([singleRuleSchema, rulesGroupSchema]))
+  })
+);
+
+export const segmentRulesSchema = rulesGroupSchema;
+
+export const segmentSchema = z.object({
+  name: z.string().min(1, "Segment name is required"),
+  rulesJson: z.string().refine((val) => {
+    try {
+      const parsed = JSON.parse(val);
+      segmentRulesSchema.parse(parsed);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Invalid rules format"),
+  createdBy: z.string().min(1, "Created by is required")
+});
+
+export const campaignSchema = z.object({
+  segmentId: z.string().optional(),
+  name: z.string().min(1, "Campaign name is required"),
+  messageTemplate: z.string().optional(),
+  scheduledAt: z.string().datetime().optional()
+});

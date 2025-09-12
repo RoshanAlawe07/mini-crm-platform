@@ -34,5 +34,59 @@ model Customer {
   visitsCount Int      @default(0)
   createdAt   DateTime @default(now())
 
+  // Relations
+  communicationLogs CommunicationLog[]
+
   @@map("customers")
+}
+
+model Segment {
+  id        String   @id @default(cuid())
+  name      String
+  rulesJson String   // JSON string containing the rules format
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  campaigns Campaign[]
+
+  @@map("segments")
+}
+
+model Campaign {
+  id              String   @id @default(cuid())
+  segmentId       String?
+  name            String
+  messageTemplate String?
+  status          String   @default("DRAFT") // DRAFT or SCHEDULED
+  rulesJson       String?  // JSON string containing the rules format
+  scheduledAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  segment           Segment?           @relation(fields: [segmentId], references: [id], onDelete: SetNull)
+  communicationLogs CommunicationLog[]
+
+  @@map("campaigns")
+}
+
+model CommunicationLog {
+  id              String   @id @default(cuid())
+  campaignId      String
+  customerId      String
+  messageId       String   @unique @default(cuid()) // UUID for idempotency
+  message         String
+  status          String   @default("PENDING") // PENDING, SENT, FAILED
+  attempts        Int      @default(0)
+  lastAttemptAt   DateTime?
+  deliveryReceipt String?  // JSON string
+  createdAt       DateTime @default(now())
+
+  // Relations
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("communication_log")
 }

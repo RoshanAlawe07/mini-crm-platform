@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { customerSchema } from "../validation/schemas";
 import { PrismaClient } from '@prisma/client';
+import { RulesEngine } from '../services/rulesEngine.service';
+import { SqlEvaluator } from '../services/sqlEvaluator.service';
 
 const prisma = new PrismaClient();
 
@@ -113,7 +115,7 @@ export async function getCustomers(req: Request, res: Response) {
 
     const totalPages = Math.ceil(total / limitNum);
 
-    res.json({
+    return res.json({
       customers,
       pagination: {
         page: pageNum,
@@ -126,6 +128,48 @@ export async function getCustomers(req: Request, res: Response) {
     });
   } catch (error) {
     console.error('Get customers error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function filterCustomersByRules(req: Request, res: Response): Promise<void> {
+  try {
+    const { rules, page = 1, limit = 10 } = req.body;
+    
+    // Validate rules format using SQL evaluator for better validation
+    const validation = SqlEvaluator.validateRulesForSql(rules);
+    if (!validation.isValid) {
+      res.status(400).json({
+        success: false,
+        error: validation.error || 'Invalid rules format',
+      });
+    }
+
+    // Use SQL evaluator for better performance
+    const result = await SqlEvaluator.getAudience(
+      prisma,
+      rules,
+      Number(page),
+      Number(limit)
+    );
+
+    res.json({
+      success: true,
+      data: {
+        customers: result.customers,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+        hasNext: result.page < result.totalPages,
+        hasPrev: result.page > 1,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error filtering customers by rules:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to filter customers',
+    });
   }
 }

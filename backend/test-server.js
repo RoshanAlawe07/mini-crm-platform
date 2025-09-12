@@ -31,7 +31,7 @@ app.post('/api/auth/register', async (req, res) => {
     
     const user = await prisma.user.create({
       data: {
-        email,
+        email, 
         password: password,
         name
       },
