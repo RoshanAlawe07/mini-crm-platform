@@ -8,11 +8,18 @@ const prisma = new PrismaClient();
 
 export async function createCampaign(req: Request, res: Response) {
   try {
+    // For now, use a default user ID. In a real app, this would come from auth middleware
+    const defaultUserId = 'default-user-id';
+    
     const campaign = await prisma.campaign.create({
       data: {
         name: req.body.name,
+        userId: defaultUserId,
         status: "DRAFT", // or "SCHEDULED"
         rulesJson: req.body.rules_json, // keep rules for later
+        segmentId: req.body.segmentId,
+        messageTemplate: req.body.messageTemplate,
+        scheduledAt: req.body.scheduledAt ? new Date(req.body.scheduledAt) : null,
       },
     });
 

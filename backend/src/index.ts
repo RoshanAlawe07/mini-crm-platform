@@ -51,6 +51,7 @@ import customersRoutes from './routes/customers.routes';
 import segmentsRoutes from './routes/segments.routes';
 import campaignsRoutes from './routes/campaigns.routes';
 import deliveryReceiptRoutes from './routes/deliveryReceipt.routes';
+import aiRoutes from './routes/ai.routes';
 
 // Import workers
 import './workers/campaign.worker';
@@ -61,6 +62,7 @@ app.use('/api/customers', customersRoutes);
 app.use('/api/segments', segmentsRoutes);
 app.use('/api/campaigns', campaignsRoutes);
 app.use('/api/delivery-receipt', deliveryReceiptRoutes);
+app.use('/api/ai', aiRoutes);
 // app.use('/api/users', userRoutes);
 // app.use('/api/contacts', contactRoutes);
 

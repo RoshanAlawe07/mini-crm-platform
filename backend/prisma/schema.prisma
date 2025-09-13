@@ -12,14 +12,17 @@ datasource db {
 
 model User {
   id        String   @id @default(cuid())
+  googleId  String?  @unique
   email     String   @unique
   name      String?
-  password  String
+  picture   String?
   role      String   @default("USER")
-  avatar    String?
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relations
+  campaigns Campaign[]
 
   @@map("users")
 }
@@ -56,6 +59,7 @@ model Segment {
 
 model Campaign {
   id              String   @id @default(cuid())
+  userId          String
   segmentId       String?
   name            String
   messageTemplate String?
@@ -66,7 +70,8 @@ model Campaign {
   updatedAt       DateTime @updatedAt
 
   // Relations
-  segment           Segment?           @relation(fields: [segmentId], references: [id], onDelete: SetNull)
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segment           Segment?            @relation(fields: [segmentId], references: [id], onDelete: SetNull)
   communicationLogs CommunicationLog[]
 
   @@map("campaigns")

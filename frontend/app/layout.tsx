@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Mini CRM Platform',
-  description: 'A modern CRM platform built with Next.js and Node.js',
+  title: 'FlowCRM',
+  description: 'FlowCRM - Your modern CRM workspace',
 }
 
 export default function RootLayout({
@@ -17,9 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   )

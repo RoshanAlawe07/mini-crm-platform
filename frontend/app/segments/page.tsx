@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { api } from '../../lib/api';
 import { segmentsApi } from '../../lib/segments';
 
@@ -70,10 +71,35 @@ export default function SegmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200">
+        {/* Left side - Brand and Navigation */}
+        <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
+          <Link href="/" className="text-2xl font-bold text-black">FlowCRM®</Link>
+          <nav className="flex space-x-6">
+            <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors">
+              Dashboard
+            </Link>
+            <Link href="/customers" className="text-gray-500 hover:text-gray-700 transition-colors">
+              Customers
+            </Link>
+            <Link href="/campaigns" className="text-gray-500 hover:text-gray-700 transition-colors">
+              Campaigns
+            </Link>
+          </nav>
+        </div>
+        
+        {/* Right side - Logout Button */}
+        <button className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" style={{marginRight: '70px'}}>
+          Logout
+        </button>
+      </header>
+
+      {/* Main Content */}
+      <main className="px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Customer Segments</h1>
+          <h1 className="text-3xl font-bold text-black">Customer Segments</h1>
           <p className="mt-2 text-gray-600">
             Create and manage customer segments using flexible rules
           </p>
@@ -130,7 +156,7 @@ export default function SegmentsPage() {
             )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

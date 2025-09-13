@@ -1,19 +1,178 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 
 const app = express();
 const PORT = 3001;
 const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret";
 
 app.use(cors());
 app.use(express.json());
+
+// Auth middleware
+function authMiddleware(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  
+  if (!authHeader) {
+    return res.status(401).json({ 
+      success: false, 
+      error: "Missing authorization header" 
+    });
+  }
+
+  const token = authHeader.split(" ")[1];
+  
+  if (!token) {
+    return res.status(401).json({ 
+      success: false, 
+      error: "Missing token" 
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      name: decoded.name,
+      googleId: decoded.googleId
+    };
+    next();
+  } catch (err) {
+    return res.status(403).json({ 
+      success: false, 
+      error: "Invalid or expired token" 
+    });
+  }
+}
 
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
+  });
+});
+
+// Auth routes
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { googleId, email, name, picture } = req.body;
+
+    if (!googleId || !email) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required Google profile data"
+      });
+    }
+
+    let user = await prisma.user.findUnique({
+      where: { googleId }
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          googleId,
+          email,
+          name,
+          picture
+        }
+      });
+    } else {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          email,
+          name,
+          picture
+        }
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        googleId: user.googleId
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          picture: user.picture
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error("Google auth error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Authentication failed"
+    });
+  }
+});
+
+app.get('/api/auth/me', async (req, res) => {
+  try {
+    const authHeader = req.headers["authorization"];
+    
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        error: "Missing authorization header"
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        picture: true,
+        role: true,
+        createdAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { user }
+    });
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      error: "Invalid token"
+    });
+  }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.json({
+    success: true,
+    message: "Logged out successfully"
   });
 });
 
@@ -92,13 +251,14 @@ app.post('/api/segments/preview', async (req, res) => {
   }
 });
 
-app.post('/api/campaigns', async (req, res) => {
+app.post('/api/campaigns', authMiddleware, async (req, res) => {
   try {
     const { name, rules_json, messageTemplate } = req.body;
     
     const campaign = await prisma.campaign.create({
       data: {
         name,
+        userId: req.user.id,
         status: "DRAFT",
         rulesJson: rules_json,
         messageTemplate: messageTemplate,
@@ -111,11 +271,16 @@ app.post('/api/campaigns', async (req, res) => {
   }
 });
 
-app.post('/api/campaigns/:id/send', async (req, res) => {
+app.post('/api/campaigns/:id/send', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const campaign = await prisma.campaign.findUnique({ where: { id } });
+    const campaign = await prisma.campaign.findFirst({ 
+      where: { 
+        id,
+        userId: req.user.id
+      } 
+    });
     if (!campaign) {
       res.status(404).json({ success: false, error: 'Campaign not found' });
       return;
@@ -223,12 +388,15 @@ app.post('/api/campaigns/:id/send', async (req, res) => {
   }
 });
 
-app.get('/api/campaigns/:id/stats', async (req, res) => {
+app.get('/api/campaigns/:id/stats', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const campaign = await prisma.campaign.findUnique({
-      where: { id },
+    const campaign = await prisma.campaign.findFirst({
+      where: { 
+        id,
+        userId: req.user.id
+      },
       include: { communicationLogs: true }
     });
 
@@ -299,9 +467,10 @@ app.post('/api/delivery-receipt', async (req, res) => {
   }
 });
 
-app.get('/api/campaigns', async (req, res) => {
+app.get('/api/campaigns', authMiddleware, async (req, res) => {
   try {
     const campaigns = await prisma.campaign.findMany({
+      where: { userId: req.user.id },
       include: { communicationLogs: true }
     });
     res.json({ success: true, data: campaigns });
@@ -354,6 +523,123 @@ app.post('/vendor/send', async (req, res) => {
     });
   }
 });
+
+// AI Message Suggestions
+app.post('/api/ai/message-suggest', async (req, res) => {
+  try {
+    const { objective, segmentId, campaignType = 'promotional', tone = 'friendly' } = req.body;
+
+    if (!objective || typeof objective !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'Objective is required and must be a string'
+      });
+    }
+
+    // Rule-based message generation (placeholder for AI integration)
+    const suggestions = generateMessageSuggestions(objective, campaignType, tone);
+
+    res.json({
+      success: true,
+      data: {
+        suggestions,
+        context: {
+          objective,
+          segmentId,
+          campaignType,
+          tone
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error in suggestMessages:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to generate message suggestions'
+    });
+  }
+});
+
+function generateMessageSuggestions(objective, campaignType, tone) {
+  const suggestions = [];
+  
+  // Extract key information from objective
+  const isFestive = /diwali|holiday|festival|celebration|christmas|new year/i.test(objective);
+  const isSale = /sale|discount|offer|deal|promotion/i.test(objective);
+  const isReengagement = /inactive|reconnect|miss|come back|return/i.test(objective);
+
+  // Generate suggestions based on context
+  if (isFestive && isSale) {
+    suggestions.push({
+      id: '1',
+      text: `Celebrate ${extractFestivalName(objective)} with us! 🎉 Get 20% off on your next order.`,
+      tone: 'friendly',
+      reasoning: 'Festive sale message with emoji and discount'
+    });
+    
+    suggestions.push({
+      id: '2',
+      text: `This ${extractFestivalName(objective)}, enjoy exclusive savings on your favorite products.`,
+      tone: 'professional',
+      reasoning: 'Professional festive promotion message'
+    });
+  }
+
+  if (isReengagement) {
+    suggestions.push({
+      id: '3',
+      text: 'We miss you! This festive season, enjoy exclusive savings on your favorite products.',
+      tone: 'friendly',
+      reasoning: 'Reengagement message with festive context'
+    });
+    
+    suggestions.push({
+      id: '4',
+      text: 'Your loyalty matters. Reconnect this festive season with special offers just for you!',
+      tone: 'professional',
+      reasoning: 'Professional reengagement with loyalty emphasis'
+    });
+  }
+
+  // Generic suggestions based on campaign type
+  if (suggestions.length === 0) {
+    suggestions.push({
+      id: '5',
+      text: `Don't miss out! ${objective} - Limited time offer available now.`,
+      tone: 'urgent',
+      reasoning: 'Generic urgent promotional message'
+    });
+    
+    suggestions.push({
+      id: '6',
+      text: `We have something special for you! ${objective} - Check it out today.`,
+      tone: 'friendly',
+      reasoning: 'Generic friendly promotional message'
+    });
+  }
+
+  // Ensure we have at least 2-3 suggestions
+  while (suggestions.length < 2) {
+    suggestions.push({
+      id: `${suggestions.length + 1}`,
+      text: `Special offer: ${objective} - Act now and save!`,
+      tone: 'professional',
+      reasoning: 'Fallback promotional message'
+    });
+  }
+
+  return suggestions.slice(0, 3); // Return maximum 3 suggestions
+}
+
+function extractFestivalName(objective) {
+  const festivals = ['Diwali', 'Christmas', 'New Year', 'Holiday', 'Festival'];
+  for (const festival of festivals) {
+    if (objective.toLowerCase().includes(festival.toLowerCase())) {
+      return festival;
+    }
+  }
+  return 'Holiday';
+}
 
 app.get('/vendor/health', (req, res) => {
   res.json({

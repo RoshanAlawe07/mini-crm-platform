@@ -1,0 +1,380 @@
+{
+  "info": {
+    "name": "Authentication System Testing",
+    "description": "Complete testing of Google OAuth authentication and protected routes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication Flow",
+      "item": [
+        {
+          "name": "Google OAuth Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"googleId\": \"google_123456789\",\n  \"email\": \"test@example.com\",\n  \"name\": \"Test User\",\n  \"picture\": \"https://example.com/avatar.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/google",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "google"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Protected Routes Testing",
+      "item": [
+        {
+          "name": "Create Campaign (Authenticated)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Authenticated User Campaign\",\n  \"rules_json\": \"{\\\"op\\\":\\\"AND\\\",\\\"rules\\\":[{\\\"field\\\":\\\"total_spend\\\",\\\"operator\\\":\\\">\\\",\\\"value\\\":1000}]}\",\n  \"messageTemplate\": \"Hello from authenticated user!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns"]
+            }
+          }
+        },
+        {
+          "name": "Get User Campaigns (Authenticated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns"]
+            }
+          }
+        },
+        {
+          "name": "Send Campaign (Authenticated)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/campaigns/{{campaign_id}}/send",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns", "{{campaign_id}}", "send"]
+            }
+          }
+        },
+        {
+          "name": "Get Campaign Stats (Authenticated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/campaigns/{{campaign_id}}/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns", "{{campaign_id}}", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Unauthorized Access Testing",
+      "item": [
+        {
+          "name": "Create Campaign (No Token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Unauthorized Campaign\",\n  \"rules_json\": \"{\\\"op\\\":\\\"AND\\\",\\\"rules\\\":[{\\\"field\\\":\\\"total_spend\\\",\\\"operator\\\":\\\">\\\",\\\"value\\\":1000}]}\",\n  \"messageTemplate\": \"This should fail!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns"]
+            }
+          }
+        },
+        {
+          "name": "Get Campaigns (No Token)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns"]
+            }
+          }
+        },
+        {
+          "name": "Create Campaign (Invalid Token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid_token_123"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Invalid Token Campaign\",\n  \"rules_json\": \"{\\\"op\\\":\\\"AND\\\",\\\"rules\\\":[{\\\"field\\\":\\\"total_spend\\\",\\\"operator\\\":\\\">\\\",\\\"value\\\":1000}]}\",\n  \"messageTemplate\": \"This should also fail!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Multi-User Testing",
+      "item": [
+        {
+          "name": "Login User 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"googleId\": \"google_user1\",\n  \"email\": \"user1@example.com\",\n  \"name\": \"User One\",\n  \"picture\": \"https://example.com/user1.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/google",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "google"]
+            }
+          }
+        },
+        {
+          "name": "Login User 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"googleId\": \"google_user2\",\n  \"email\": \"user2@example.com\",\n  \"name\": \"User Two\",\n  \"picture\": \"https://example.com/user2.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/google",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "google"]
+            }
+          }
+        },
+        {
+          "name": "Create Campaign as User 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user1_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"User 1 Campaign\",\n  \"rules_json\": \"{\\\"op\\\":\\\"AND\\\",\\\"rules\\\":[{\\\"field\\\":\\\"total_spend\\\",\\\"operator\\\":\\\">\\\",\\\"value\\\":1000}]}\",\n  \"messageTemplate\": \"This is User 1's campaign!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns"]
+            }
+          }
+        },
+        {
+          "name": "Create Campaign as User 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user2_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"User 2 Campaign\",\n  \"rules_json\": \"{\\\"op\\\":\\\"AND\\\",\\\"rules\\\":[{\\\"field\\\":\\\"total_spend\\\",\\\"operator\\\":\\\">\\\",\\\"value\\\":5000}]}\",\n  \"messageTemplate\": \"This is User 2's campaign!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns"]
+            }
+          }
+        },
+        {
+          "name": "Get User 1 Campaigns Only",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user1_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns"]
+            }
+          }
+        },
+        {
+          "name": "Get User 2 Campaigns Only",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user2_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "campaigns"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user1_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user2_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "campaign_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
+
+
