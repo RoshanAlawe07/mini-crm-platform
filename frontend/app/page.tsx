@@ -8,17 +8,23 @@ export default function Home() {
         {/* Left side - Brand and Navigation */}
         <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
           <h1 className="text-2xl font-bold text-black">FlowCRM®</h1>
-          <nav className="flex space-x-6">
-            <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/customers" className="text-gray-500 hover:text-gray-700 transition-colors">
-              Customers
-            </Link>
-            <Link href="/campaigns" className="text-gray-500 hover:text-gray-700 transition-colors">
-              Campaigns
-            </Link>
-          </nav>
+       <nav className="flex space-x-6">
+         <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors">
+           Dashboard
+         </Link>
+         <Link href="/customers" className="text-gray-500 hover:text-gray-700 transition-colors">
+           Customers
+         </Link>
+         <Link href="/orders" className="text-gray-500 hover:text-gray-700 transition-colors">
+           Orders
+         </Link>
+         <Link href="/campaigns" className="text-gray-500 hover:text-gray-700 transition-colors">
+           Campaigns
+         </Link>
+         <Link href="/segments" className="text-gray-500 hover:text-gray-700 transition-colors">
+           Segments
+         </Link>
+       </nav>
         </div>
         
         {/* Right side - Logout Button */}

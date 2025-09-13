@@ -39,8 +39,24 @@ model Customer {
 
   // Relations
   communicationLogs CommunicationLog[]
+  orders            Order[]
 
   @@map("customers")
+}
+
+model Order {
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  customerId String
+  amount     Float
+  status     String   @default("PENDING") // PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("orders")
 }
 
 model Segment {

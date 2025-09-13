@@ -84,8 +84,14 @@ export default function SegmentsPage() {
             <Link href="/customers" className="text-gray-500 hover:text-gray-700 transition-colors">
               Customers
             </Link>
+            <Link href="/orders" className="text-gray-500 hover:text-gray-700 transition-colors">
+              Orders
+            </Link>
             <Link href="/campaigns" className="text-gray-500 hover:text-gray-700 transition-colors">
               Campaigns
+            </Link>
+            <Link href="/segments" className="text-black font-medium">
+              Segments
             </Link>
           </nav>
         </div>

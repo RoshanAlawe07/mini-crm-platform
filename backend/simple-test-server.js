@@ -178,17 +178,66 @@ app.post('/api/auth/logout', (req, res) => {
 
 app.post('/api/customers', async (req, res) => {
   try {
-    const { name, email, phone, totalSpend, visitsCount } = req.body;
+    const { name, email, phone, total_spend, visits_count } = req.body;
     
     const customer = await prisma.customer.upsert({
       where: { email },
-      update: { name, phone, totalSpend: totalSpend || 0, visitsCount: visitsCount || 0 },
-      create: { name, email, phone, totalSpend: totalSpend || 0, visitsCount: visitsCount || 0 },
+      update: { 
+        name, 
+        phone, 
+        totalSpend: total_spend || 0, 
+        visitsCount: visits_count || 0 
+      },
+      create: { 
+        name, 
+        email, 
+        phone, 
+        totalSpend: total_spend || 0, 
+        visitsCount: visits_count || 0 
+      },
     });
     
-    res.status(201).json({ success: true, data: customer });
+    res.status(201).json({ 
+      message: "Customer created successfully", 
+      customer: {
+        id: customer.id.toString(),
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        totalSpend: customer.totalSpend,
+        lastActive: customer.lastActive,
+        visitsCount: customer.visitsCount,
+        createdAt: customer.createdAt
+      }
+    });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete a specific customer
+app.delete('/api/customers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const customer = await prisma.customer.delete({
+      where: { id }
+    });
+    
+    res.json({ 
+      message: "Customer deleted successfully",
+      customer: {
+        id: customer.id.toString(),
+        name: customer.name,
+        email: customer.email
+      }
+    });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      res.status(404).json({ error: 'Customer not found' });
+    } else {
+      res.status(500).json({ error: 'Failed to delete customer' });
+    }
   }
 });
 
@@ -479,12 +528,244 @@ app.get('/api/campaigns', authMiddleware, async (req, res) => {
   }
 });
 
+// Orders API endpoints
+app.get('/api/orders', async (req, res) => {
+  try {
+    const { 
+      page = '1', 
+      limit = '10', 
+      customerId,
+      fromDate,
+      toDate,
+      sort_by = 'createdAt',
+      sort_order = 'desc'
+    } = req.query;
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build where clause for filtering
+    const where = {};
+
+    if (customerId) {
+      where.customerId = customerId;
+    }
+    if (fromDate) {
+      where.createdAt = { ...where.createdAt, gte: new Date(fromDate) };
+    }
+    if (toDate) {
+      const toDatePlusOne = new Date(toDate);
+      toDatePlusOne.setDate(toDatePlusOne.getDate() + 1);
+      where.createdAt = { ...where.createdAt, lt: toDatePlusOne };
+    }
+
+    // Build orderBy clause
+    const orderBy = {};
+    orderBy[sort_by] = sort_order;
+
+    // Get orders with pagination
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        skip,
+        take: limitNum,
+        orderBy,
+        include: {
+          customer: {
+            select: {
+              name: true
+            }
+          }
+        }
+      }),
+      prisma.order.count({ where })
+    ]);
+
+    const totalPages = Math.ceil(total / limitNum);
+
+    // Format orders for frontend
+    const formattedOrders = orders.map(order => ({
+      id: order.id,
+      orderId: order.orderId,
+      customerName: order.customer.name,
+      amount: order.amount,
+      date: order.createdAt,
+      status: order.status,
+      customerId: order.customerId
+    }));
+
+    res.json({
+      orders: formattedOrders,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages,
+        hasNext: pageNum < totalPages,
+        hasPrev: pageNum > 1
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { customerId, amount, status = 'PENDING' } = req.body;
+    
+    // Generate order ID
+    const orderId = `ORD-${Date.now().toString().slice(-3)}`;
+    
+    const order = await prisma.order.create({
+      data: {
+        orderId,
+        customerId,
+        amount: parseFloat(amount),
+        status
+      },
+      include: {
+        customer: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
+    
+    res.status(201).json({ 
+      message: "Order created successfully", 
+      order: {
+        id: order.id,
+        orderId: order.orderId,
+        customerName: order.customer.name,
+        amount: order.amount,
+        date: order.createdAt,
+        status: order.status,
+        customerId: order.customerId
+      }
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/api/orders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const order = await prisma.order.delete({
+      where: { id }
+    });
+    
+    res.json({ 
+      message: "Order deleted successfully",
+      order: {
+        id: order.id,
+        orderId: order.orderId
+      }
+    });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      res.status(404).json({ error: 'Order not found' });
+    } else {
+      res.status(500).json({ error: 'Failed to delete order' });
+    }
+  }
+});
+
 app.get('/api/customers', async (req, res) => {
   try {
-    const customers = await prisma.customer.findMany();
-    res.json({ success: true, data: customers });
+    const { 
+      page = '1', 
+      limit = '10', 
+      spend_gt, 
+      spend_lt, 
+      visits_gt, 
+      visits_lt,
+      search,
+      fromDate,
+      toDate,
+      sort_by = 'createdAt',
+      sort_order = 'desc'
+    } = req.query;
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build where clause for filtering
+    const where = {};
+
+    if (spend_gt) {
+      where.totalSpend = { ...where.totalSpend, gte: parseFloat(spend_gt) };
+    }
+    if (spend_lt) {
+      where.totalSpend = { ...where.totalSpend, lte: parseFloat(spend_lt) };
+    }
+    if (visits_gt) {
+      where.visitsCount = { ...where.visitsCount, gte: parseInt(visits_gt, 10) };
+    }
+    if (visits_lt) {
+      where.visitsCount = { ...where.visitsCount, lte: parseInt(visits_lt, 10) };
+    }
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { email: { contains: search } }
+      ];
+    }
+    if (fromDate) {
+      where.createdAt = { ...where.createdAt, gte: new Date(fromDate) };
+    }
+    if (toDate) {
+      // Add one day to include the entire toDate
+      const toDatePlusOne = new Date(toDate);
+      toDatePlusOne.setDate(toDatePlusOne.getDate() + 1);
+      where.createdAt = { ...where.createdAt, lt: toDatePlusOne };
+    }
+
+    // Build orderBy clause
+    const orderBy = {};
+    orderBy[sort_by] = sort_order;
+
+    // Get customers with pagination
+    const [customers, total] = await Promise.all([
+      prisma.customer.findMany({
+        where,
+        skip,
+        take: limitNum,
+        orderBy,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          totalSpend: true,
+          lastActive: true,
+          visitsCount: true,
+          createdAt: true
+        }
+      }),
+      prisma.customer.count({ where })
+    ]);
+
+    const totalPages = Math.ceil(total / limitNum);
+
+    res.json({
+      customers,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages,
+        hasNext: pageNum < totalPages,
+        hasPrev: pageNum > 1
+      }
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -523,123 +804,6 @@ app.post('/vendor/send', async (req, res) => {
     });
   }
 });
-
-// AI Message Suggestions
-app.post('/api/ai/message-suggest', async (req, res) => {
-  try {
-    const { objective, segmentId, campaignType = 'promotional', tone = 'friendly' } = req.body;
-
-    if (!objective || typeof objective !== 'string') {
-      return res.status(400).json({
-        success: false,
-        error: 'Objective is required and must be a string'
-      });
-    }
-
-    // Rule-based message generation (placeholder for AI integration)
-    const suggestions = generateMessageSuggestions(objective, campaignType, tone);
-
-    res.json({
-      success: true,
-      data: {
-        suggestions,
-        context: {
-          objective,
-          segmentId,
-          campaignType,
-          tone
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error in suggestMessages:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to generate message suggestions'
-    });
-  }
-});
-
-function generateMessageSuggestions(objective, campaignType, tone) {
-  const suggestions = [];
-  
-  // Extract key information from objective
-  const isFestive = /diwali|holiday|festival|celebration|christmas|new year/i.test(objective);
-  const isSale = /sale|discount|offer|deal|promotion/i.test(objective);
-  const isReengagement = /inactive|reconnect|miss|come back|return/i.test(objective);
-
-  // Generate suggestions based on context
-  if (isFestive && isSale) {
-    suggestions.push({
-      id: '1',
-      text: `Celebrate ${extractFestivalName(objective)} with us! 🎉 Get 20% off on your next order.`,
-      tone: 'friendly',
-      reasoning: 'Festive sale message with emoji and discount'
-    });
-    
-    suggestions.push({
-      id: '2',
-      text: `This ${extractFestivalName(objective)}, enjoy exclusive savings on your favorite products.`,
-      tone: 'professional',
-      reasoning: 'Professional festive promotion message'
-    });
-  }
-
-  if (isReengagement) {
-    suggestions.push({
-      id: '3',
-      text: 'We miss you! This festive season, enjoy exclusive savings on your favorite products.',
-      tone: 'friendly',
-      reasoning: 'Reengagement message with festive context'
-    });
-    
-    suggestions.push({
-      id: '4',
-      text: 'Your loyalty matters. Reconnect this festive season with special offers just for you!',
-      tone: 'professional',
-      reasoning: 'Professional reengagement with loyalty emphasis'
-    });
-  }
-
-  // Generic suggestions based on campaign type
-  if (suggestions.length === 0) {
-    suggestions.push({
-      id: '5',
-      text: `Don't miss out! ${objective} - Limited time offer available now.`,
-      tone: 'urgent',
-      reasoning: 'Generic urgent promotional message'
-    });
-    
-    suggestions.push({
-      id: '6',
-      text: `We have something special for you! ${objective} - Check it out today.`,
-      tone: 'friendly',
-      reasoning: 'Generic friendly promotional message'
-    });
-  }
-
-  // Ensure we have at least 2-3 suggestions
-  while (suggestions.length < 2) {
-    suggestions.push({
-      id: `${suggestions.length + 1}`,
-      text: `Special offer: ${objective} - Act now and save!`,
-      tone: 'professional',
-      reasoning: 'Fallback promotional message'
-    });
-  }
-
-  return suggestions.slice(0, 3); // Return maximum 3 suggestions
-}
-
-function extractFestivalName(objective) {
-  const festivals = ['Diwali', 'Christmas', 'New Year', 'Holiday', 'Festival'];
-  for (const festival of festivals) {
-    if (objective.toLowerCase().includes(festival.toLowerCase())) {
-      return festival;
-    }
-  }
-  return 'Holiday';
-}
 
 app.get('/vendor/health', (req, res) => {
   res.json({

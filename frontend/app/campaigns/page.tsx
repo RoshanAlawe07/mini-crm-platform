@@ -97,8 +97,14 @@ export default function CampaignsPage() {
               <Link href="/customers" className="text-gray-500 hover:text-gray-700 transition-colors">
                 Customers
               </Link>
+              <Link href="/orders" className="text-gray-500 hover:text-gray-700 transition-colors">
+                Orders
+              </Link>
               <Link href="/campaigns" className="text-black font-medium">
                 Campaigns
+              </Link>
+              <Link href="/segments" className="text-gray-500 hover:text-gray-700 transition-colors">
+                Segments
               </Link>
             </nav>
           </div>
@@ -128,8 +134,14 @@ export default function CampaignsPage() {
             <Link href="/customers" className="text-gray-500 hover:text-gray-700 transition-colors">
               Customers
             </Link>
+            <Link href="/orders" className="text-gray-500 hover:text-gray-700 transition-colors">
+              Orders
+            </Link>
             <Link href="/campaigns" className="text-black font-medium">
               Campaigns
+            </Link>
+            <Link href="/segments" className="text-gray-500 hover:text-gray-700 transition-colors">
+              Segments
             </Link>
           </nav>
         </div>

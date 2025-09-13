@@ -52,7 +52,7 @@ router.post("/google", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         user: {
@@ -66,7 +66,7 @@ router.post("/google", async (req, res) => {
     });
   } catch (error) {
     console.error("Google auth error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Authentication failed"
     });
@@ -107,12 +107,12 @@ router.get("/me", async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { user }
     });
   } catch (error) {
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       error: "Invalid token"
     });

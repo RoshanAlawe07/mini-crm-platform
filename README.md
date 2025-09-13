@@ -2,7 +2,7 @@
 
 A modern, full-stack CRM platform built with React.js, Node.js, and Express.js.
 
-## 🏗️ Architecture
+## Architecture
 
 - **Frontend**: React.js with Next.js 14, TypeScript, Tailwind CSS
 - **Backend**: Node.js with Express.js, TypeScript, Prisma ORM
@@ -11,7 +11,7 @@ A modern, full-stack CRM platform built with React.js, Node.js, and Express.js.
 - **Authentication**: JWT
 - **File Upload**: Multer with Sharp for image processing
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 mini-crm-platform/
@@ -38,7 +38,7 @@ mini-crm-platform/
 └── README.md
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -95,7 +95,7 @@ mini-crm-platform/
    npm run dev
    ```
 
-## 🔧 Available Scripts
+## Available Scripts
 
 ### Backend Scripts
 - `npm run dev` - Start development server with hot reload
@@ -113,7 +113,7 @@ mini-crm-platform/
 - `npm run lint` - Run ESLint
 - `npm run type-check` - Run TypeScript type checking
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 - **Runtime**: Node.js
@@ -138,20 +138,19 @@ mini-crm-platform/
 - **Notifications**: React Hot Toast
 - **Charts**: Recharts
 
-## 📊 Features
+## Features
 
-- **User Management**: Authentication, authorization, user profiles
-- **Contact Management**: CRUD operations for contacts
-- **Company Management**: Manage company information
-- **Deal Tracking**: Track sales deals and opportunities
-- **Task Management**: Create and manage tasks
-- **Activity Logging**: Track user activities
+- **Customer Management**: Complete CRUD operations for customers with pagination and filtering
+- **Order Management**: Create, track, and manage orders with automatic customer spend updates
+- **User Authentication**: JWT-based authentication system
+- **Campaign Management**: Create and manage marketing campaigns
+- **Segment Management**: Dynamic customer segmentation with rule-based filtering
 - **File Upload**: Handle file uploads with image processing
 - **Email Integration**: Send emails and notifications
 - **Background Jobs**: Queue system for heavy operations
-- **Real-time Updates**: WebSocket support (planned)
+- **Real-time Updates**: Automatic data refresh after operations
 
-## 🔒 Security Features
+## Security Features
 
 - Helmet.js for security headers
 - CORS configuration
@@ -161,11 +160,11 @@ mini-crm-platform/
 - JWT token authentication
 - File upload validation
 
-## 📝 API Documentation
+## API Documentation
 
 The API documentation will be available at `/api/docs` when the server is running.
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -173,10 +172,10 @@ The API documentation will be available at `/api/docs` when the server is runnin
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
-## 🆘 Support
+## Support
 
 For support, please open an issue in the repository or contact the development team.
