@@ -1,9 +1,16 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
+import { register, login } from "../controllers/authController";
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Signup endpoint
+router.post("/signup", register);
+
+// Signin endpoint
+router.post("/signin", login);
 
 // Google OAuth callback
 router.post("/google", async (req, res) => {
