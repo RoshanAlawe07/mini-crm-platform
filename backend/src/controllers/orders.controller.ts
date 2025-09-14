@@ -173,9 +173,26 @@ export async function getOrders(req: Request, res: Response) {
     });
   } catch (error: any) {
     console.error('Error fetching orders:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    
+    // Handle specific Prisma errors
+    if (error.code === 'P2021') {
+      return res.status(500).json({
+        error: 'Database table not found',
+        message: 'The orders table does not exist. Please run database migrations.',
+        details: error.message
+      });
+    }
+    
     return res.status(500).json({
       error: 'Failed to fetch orders',
-      message: error.message
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }
