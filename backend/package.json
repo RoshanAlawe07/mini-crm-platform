@@ -26,6 +26,7 @@
     "db:auto-fix": "node auto-fix-startup.js",
     "db:fix-messageid": "node add-messageid-column.js",
     "db:fix-communicationlog": "node fix-communicationlog-schema.js",
+    "fix-messageid": "node one-time-messageid-fix.js",
     "prisma:studio": "prisma studio --schema=./prisma/schema.prisma",
     "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },

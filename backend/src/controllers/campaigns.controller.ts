@@ -8,7 +8,10 @@ const prisma = new PrismaClient();
 
 // Helper function to generate unique messageId
 function generateMessageId(): string {
-  return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substr(2, 9);
+  const extra = Math.random().toString(36).substr(2, 4);
+  return `msg_${timestamp}_${random}_${extra}`;
 }
 
 // Helper function to create communication log safely
@@ -41,6 +44,19 @@ async function createCommunicationLog(data: any) {
         data: dataWithoutMessageId
       });
     }
+    
+    // If unique constraint violation on messageId, try with a new ID
+    if (error.code === 'P2002' && error.meta?.target?.includes('messageId')) {
+      console.log('⚠️  messageId unique constraint violation, trying with new ID');
+      const newData = {
+        ...data,
+        messageId: generateMessageId()
+      };
+      return await prisma.communicationLog.create({
+        data: newData
+      });
+    }
+    
     throw error;
   }
 }
@@ -49,24 +65,46 @@ async function createCommunicationLog(data: any) {
 async function simulateMessageSending(campaignId: string, customerIds: string[], messageTemplate: string) {
   const communicationLogs = [];
   
-  for (const customerId of customerIds) {
-    // Simulate realistic failure rate (around 10-15%)
-    const isSuccess = Math.random() > 0.12; // 88% success rate
-    const status = isSuccess ? 'SENT' : 'FAILED';
+  console.log(`📤 Starting message simulation for ${customerIds.length} customers`);
+  
+  for (let i = 0; i < customerIds.length; i++) {
+    const customerId = customerIds[i];
+    console.log(`📝 Processing customer ${i + 1}/${customerIds.length}: ${customerId}`);
     
-    const log = await createCommunicationLog({
-      campaignId,
-      customerId,
-      message: messageTemplate,
-      status,
-      attempts: 1,
-      lastAttemptAt: new Date(),
-      deliveryReceipt: isSuccess ? JSON.stringify({ delivered: true, timestamp: new Date() }) : JSON.stringify({ error: 'Delivery failed' })
-    });
-    
-    communicationLogs.push(log);
+    try {
+      // Simulate realistic failure rate (around 10-15%)
+      const isSuccess = Math.random() > 0.12; // 88% success rate
+      const status = isSuccess ? 'SENT' : 'FAILED';
+      
+      console.log(`📊 Customer ${customerId} status: ${status}`);
+      
+      const log = await createCommunicationLog({
+        campaignId,
+        customerId,
+        message: messageTemplate,
+        status,
+        attempts: 1,
+        lastAttemptAt: new Date(),
+        deliveryReceipt: isSuccess ? JSON.stringify({ delivered: true, timestamp: new Date() }) : JSON.stringify({ error: 'Delivery failed' })
+      });
+      
+      communicationLogs.push(log);
+      console.log(`✅ Successfully processed customer ${customerId}`);
+      
+    } catch (error: any) {
+      console.error(`❌ Failed to process customer ${customerId}:`, error.message);
+      console.error('Error details:', {
+        name: error.name,
+        code: error.code,
+        meta: error.meta
+      });
+      
+      // Continue with other customers even if one fails
+      console.log(`⚠️  Skipping customer ${customerId} and continuing with others`);
+    }
   }
   
+  console.log(`📊 Message simulation completed: ${communicationLogs.length}/${customerIds.length} customers processed`);
   return communicationLogs;
 }
 
