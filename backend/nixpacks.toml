@@ -6,9 +6,10 @@ cmds = ["npm ci"]
 
 [phases.build]
 cmds = [
-  "npx prisma generate",
+  "cp prisma/schema.railway.prisma prisma/schema.prisma",
+  "npx prisma generate --schema=./prisma/schema.prisma",
   "npx tsc",
-  "npx prisma db push"
+  "npx prisma db push --schema=./prisma/schema.prisma"
 ]
 
 [start]

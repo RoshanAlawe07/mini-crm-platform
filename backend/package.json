@@ -9,6 +9,7 @@
     "dev:simple": "node simple-test-server.js",
     "build": "npx tsc",
     "start": "node simple-railway-start.js",
+    "railway:setup": "node railway-setup.js",
     "start:dev": "node simple-test-server.js",
     "worker": "ts-node src/workers/customerWorker.ts",
     "worker:dev": "nodemon --exec ts-node src/workers/customerWorker.ts",

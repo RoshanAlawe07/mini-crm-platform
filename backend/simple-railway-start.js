@@ -1,8 +1,16 @@
 console.log('🚀 Starting XenoCRM Backend on Railway...');
 console.log('📁 Current working directory:', process.cwd());
 
-// Simple start script that just starts the app
-// Prisma client should already be generated during build
+// Run setup first
+try {
+  console.log('🔧 Running Railway setup...');
+  require('./railway-setup.js');
+} catch (error) {
+  console.error('❌ Railway setup failed:', error);
+  process.exit(1);
+}
+
+// Start the application
 try {
   console.log('🎯 Starting application...');
   require('./dist/index.js');
