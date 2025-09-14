@@ -9,6 +9,7 @@
     "dev:simple": "node simple-test-server.js",
     "build": "npx tsc",
     "start": "node simple-railway-start.js",
+    "start:railway": "node railway-production-start.js",
     "railway:setup": "node railway-setup.js",
     "start:dev": "node simple-test-server.js",
     "worker": "ts-node src/workers/customerWorker.ts",
@@ -16,6 +17,7 @@
     "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
     "prisma:push": "prisma db push --schema=./prisma/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
+    "prisma:migrate:deploy": "prisma migrate deploy --schema=./prisma/schema.prisma",
     "prisma:studio": "prisma studio --schema=./prisma/schema.prisma",
     "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },

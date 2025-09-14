@@ -9,6 +9,22 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Validate required environment variables
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL environment variable is required but not set!');
+  console.error('   Please set DATABASE_URL in your environment variables.');
+  console.error('   Format: postgresql://username:password@host:port/database_name');
+  process.exit(1);
+}
+
+// Validate DATABASE_URL format
+if (!process.env.DATABASE_URL.startsWith('postgresql://') && !process.env.DATABASE_URL.startsWith('postgres://')) {
+  console.error('❌ DATABASE_URL must be a PostgreSQL connection string!');
+  console.error('   Current value:', process.env.DATABASE_URL);
+  console.error('   Expected format: postgresql://username:password@host:port/database_name');
+  process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
