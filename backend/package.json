@@ -23,6 +23,7 @@
     "redis:test": "node test-redis-connection.js",
     "db:fix": "node fix-missing-columns.js",
     "db:sql-fix": "node run-sql-fix.js",
+    "db:auto-fix": "node auto-fix-startup.js",
     "prisma:studio": "prisma studio --schema=./prisma/schema.prisma",
     "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },

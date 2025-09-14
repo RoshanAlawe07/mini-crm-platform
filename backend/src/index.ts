@@ -9,6 +9,22 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Auto-fix database on startup (for free tier without shell access)
+async function runAutoFix() {
+  try {
+    console.log('🔧 Running automatic database fix...');
+    const { autoFixDatabase } = require('../auto-fix-startup.js');
+    const success = await autoFixDatabase();
+    if (success) {
+      console.log('✅ Database auto-fix completed successfully');
+    } else {
+      console.log('⚠️  Database auto-fix had issues, but continuing...');
+    }
+  } catch (error: any) {
+    console.log('⚠️  Database auto-fix failed, but continuing:', error.message);
+  }
+}
+
 // Validate required environment variables
 if (!process.env.DATABASE_URL) {
   console.error('❌ DATABASE_URL environment variable is required but not set!');
@@ -113,9 +129,17 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-});
+// Start server with auto-fix
+async function startServer() {
+  // Run auto-fix before starting server
+  await runAutoFix();
+  
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  });
+}
+
+startServer();
 
 export default app;
