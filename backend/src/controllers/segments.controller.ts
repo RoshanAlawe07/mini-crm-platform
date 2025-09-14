@@ -25,9 +25,18 @@ export async function createSegment(req: Request, res: Response) {
     });
   } catch (error: any) {
     console.error('Error creating segment:', error);
+    console.error('Request body:', req.body);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      issues: error.issues || 'No validation issues'
+    });
+    
     res.status(400).json({
       success: false,
       error: error.message || 'Failed to create segment',
+      details: error.issues || 'Validation failed',
+      receivedData: req.body
     });
   }
 }
