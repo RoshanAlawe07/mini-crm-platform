@@ -51,21 +51,21 @@ export default function Home() {
       <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200">
         {/* Left side - Brand and Navigation */}
         <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
-          <h1 className="text-2xl font-bold text-black">FlowCRM®</h1>
+          <h1 className="text-2xl font-bold text-black">XenoCRM</h1>
        <nav className="flex space-x-6">
-         <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors">
+         <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-gray-100">
            Dashboard
          </Link>
-         <Link href="/customers" className="text-gray-500 hover:text-gray-700 transition-colors">
+         <Link href="/customers" className="text-gray-500 hover:text-blue-600 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-blue-100">
            Customers
          </Link>
-         <Link href="/orders" className="text-gray-500 hover:text-gray-700 transition-colors">
+         <Link href="/orders" className="text-gray-500 hover:text-green-600 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-green-100">
            Orders
          </Link>
-         <Link href="/campaigns" className="text-gray-500 hover:text-gray-700 transition-colors">
+         <Link href="/campaigns" className="text-gray-500 hover:text-purple-600 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-purple-100">
            Campaigns
          </Link>
-         <Link href="/segments" className="text-gray-500 hover:text-gray-700 transition-colors">
+         <Link href="/segments" className="text-gray-500 hover:text-orange-600 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-orange-100">
            Segments
          </Link>
        </nav>
@@ -99,7 +99,7 @@ export default function Home() {
           
           {/* Google Login Button */}
           <button className="bg-black text-white px-3 py-1.5 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium mt-2.5">
-            Login with Google
+           XenoCRM
           </button>
         </div>
       </main>
@@ -179,28 +179,36 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-center gap-6" style={{marginTop: '50px'}}>
             {/* Card 1 - Summary */}
-            <div className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8">
+            <Link href="/customers" className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8 transition-all duration-300 hover:bg-blue-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
               <div className="text-center space-y-2">
-                <p className="text-sm text-gray-500 font-normal">Summary</p>
-                <p className="text-xl font-bold text-black">Customers</p>
+                <p className="text-sm text-gray-500 font-normal group-hover:text-blue-600 transition-colors duration-300">Summary</p>
+                <p className="text-xl font-bold text-black group-hover:text-blue-800 transition-colors duration-300">Customers</p>
               </div>
-            </div>
+            </Link>
 
             {/* Card 2 - Insights */}
-            <div className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8">
+            <Link href="/orders" className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8 transition-all duration-300 hover:bg-green-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
               <div className="text-center space-y-2">
-                <p className="text-sm text-gray-500 font-normal">Insights</p>
-                <p className="text-xl font-bold text-black">Orders</p>
+                <p className="text-sm text-gray-500 font-normal group-hover:text-green-600 transition-colors duration-300">Insights</p>
+                <p className="text-xl font-bold text-black group-hover:text-green-800 transition-colors duration-300">Orders</p>
               </div>
-            </div>
+            </Link>
 
             {/* Card 3 - Automation */}
-            <div className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8">
+            <Link href="/campaigns" className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8 transition-all duration-300 hover:bg-purple-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
               <div className="text-center space-y-2">
-                <p className="text-sm text-gray-500 font-normal">Automation</p>
-                <p className="text-xl font-bold text-black">Campaigns</p>
+                <p className="text-sm text-gray-500 font-normal group-hover:text-purple-600 transition-colors duration-300">Automation</p>
+                <p className="text-xl font-bold text-black group-hover:text-purple-800 transition-colors duration-300">Campaigns</p>
               </div>
-            </div>
+            </Link>
+
+            {/* Card 4 - Segmentation */}
+            <Link href="/segments" className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8 transition-all duration-300 hover:bg-orange-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
+              <div className="text-center space-y-2">
+                <p className="text-sm text-gray-500 font-normal group-hover:text-orange-600 transition-colors duration-300">Segmentation</p>
+                <p className="text-xl font-bold text-black group-hover:text-orange-800 transition-colors duration-300">Segments</p>
+              </div>
+            </Link>
           </div>
         </div>
       </section>
