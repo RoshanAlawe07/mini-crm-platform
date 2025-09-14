@@ -10,23 +10,25 @@ interface AuthRequest extends Request {
   };
 }
 
-function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+function authMiddleware(req: AuthRequest, res: Response, next: NextFunction): void {
   const authHeader = req.headers["authorization"];
   
   if (!authHeader) {
-    return res.status(401).json({ 
+    res.status(401).json({ 
       success: false, 
       error: "Missing authorization header" 
     });
+    return;
   }
 
   const token = authHeader.split(" ")[1];
   
   if (!token) {
-    return res.status(401).json({ 
+    res.status(401).json({ 
       success: false, 
       error: "Missing token" 
     });
+    return;
   }
 
   try {
@@ -39,10 +41,11 @@ function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
     };
     next();
   } catch (err) {
-    return res.status(403).json({ 
+    res.status(403).json({ 
       success: false, 
       error: "Invalid or expired token" 
     });
+    return;
   }
 }
 

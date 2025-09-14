@@ -21,7 +21,7 @@ const vendorWorker = new Worker(
         processingTime: vendorResponse.data.processing_time_ms
       };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Worker failed to call vendor for ${messageId}:`, error.message);
       
       return {

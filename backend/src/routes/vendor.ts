@@ -18,7 +18,7 @@ router.post("/send", async (req, res) => {
       vendor_timestamp: new Date().toISOString(),
       vendor_delay_ms: Math.round(delay)
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error(`Failed to callback delivery receipt for ${message_id}:`, err.message);
   }
 

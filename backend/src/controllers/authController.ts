@@ -71,7 +71,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Check password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, user.password || '');
 
     if (!isValidPassword) {
       res.status(401).json({ error: 'Invalid credentials' });
@@ -112,7 +112,7 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
         email: true,
         name: true,
         role: true,
-        avatar: true,
+        picture: true,
         createdAt: true
       }
     });

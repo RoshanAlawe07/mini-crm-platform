@@ -1,5 +1,5 @@
 // import { Worker } from "bullmq";
-// import { redisConnection, prisma } from "../services/db.service";
+import { prisma } from "../services/db.service";
 
 // Batch processing configuration
 const BATCH_SIZE = 100;
@@ -83,42 +83,42 @@ function addToBatch(update: typeof pendingUpdates[0]) {
 }
 
 // export const campaignWorker = new Worker(
-  "ingest-campaigns",
-  async (job: any) => {
-    const { customerId, campaignId, messageId } = job.data;
+//   "ingest-campaigns",
+//   async (job: any) => {
+//     const { customerId, campaignId, messageId } = job.data;
 
-    // Random delay between 200ms and 2s
-    await new Promise((res) => setTimeout(res, Math.random() * 1800 + 200));
+//     // Random delay between 200ms and 2s
+//     await new Promise((res) => setTimeout(res, Math.random() * 1800 + 200));
 
-    // 90% success, 10% fail
-    const success = Math.random() < 0.9;
+//     // 90% success, 10% fail
+//     const success = Math.random() < 0.9;
 
-    // Get the communication log ID first
-    const log = await prisma.communicationLog.findFirst({
-      where: { 
-        campaignId, 
-        customerId, 
-        messageId 
-      },
-      select: { id: true }
-    });
+//     // Get the communication log ID first
+//     const log = await prisma.communicationLog.findFirst({
+//       where: { 
+//         campaignId, 
+//         customerId, 
+//         messageId 
+//       },
+//       select: { id: true }
+//     });
 
-    if (log) {
-      // Add to batch for processing
-      addToBatch({
-        id: log.id,
-        status: success ? "SENT" : "FAILED",
-        attempts: 1,
-        lastAttemptAt: new Date(),
-        deliveryReceipt: success ? "OK" : "FAILED",
-      });
+//     if (log) {
+//       // Add to batch for processing
+//       addToBatch({
+//         id: log.id,
+//         status: success ? "SENT" : "FAILED",
+//         attempts: 1,
+//         lastAttemptAt: new Date(),
+//         deliveryReceipt: success ? "OK" : "FAILED",
+//       });
 
-      console.log(`Message ${messageId} queued for ${success ? 'sent' : 'failed'} to customer ${customerId}`);
-    } else {
-      console.warn(`Communication log not found for message ${messageId}`);
-    }
-  },
-  // { connection: redisConnection }
+//       console.log(`Message ${messageId} queued for ${success ? 'sent' : 'failed'} to customer ${customerId}`);
+//     } else {
+//       console.warn(`Communication log not found for message ${messageId}`);
+//     }
+//   },
+//   // { connection: redisConnection }
 // );
 
 // Handle job completion
