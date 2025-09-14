@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { segmentSchema } from "../validation/schemas";
+import { segmentSchema, aiHelperSchema, previewAudienceSchema } from "../validation/schemas";
 import { PrismaClient } from '@prisma/client';
 import { RulesEngine } from '../services/rulesEngine.service';
 import { SqlEvaluator } from '../services/sqlEvaluator.service';
@@ -13,6 +13,7 @@ export async function createSegment(req: Request, res: Response) {
     const segment = await prisma.segment.create({
       data: {
         name: parsed.name,
+        description: parsed.description,
         rulesJson: parsed.rulesJson,
         createdBy: parsed.createdBy,
       },
@@ -105,6 +106,7 @@ export async function updateSegment(req: Request, res: Response): Promise<void> 
       where: { id },
       data: {
         name: parsed.name,
+        description: parsed.description,
         rulesJson: parsed.rulesJson,
         updatedAt: new Date(),
       },
@@ -276,4 +278,144 @@ export async function generateSqlQuery(req: Request, res: Response): Promise<voi
       error: 'Failed to generate SQL query',
     });
   }
+}
+
+export async function aiHelperConvert(req: Request, res: Response): Promise<void> {
+  try {
+    const parsed = aiHelperSchema.parse(req.body);
+    const { prompt } = parsed;
+    
+    // Simple AI conversion logic (you can integrate with actual AI service later)
+    const convertedRules = convertTextToRules(prompt);
+    
+    res.json({
+      success: true,
+      data: {
+        rules: convertedRules,
+        originalPrompt: prompt
+      },
+    });
+  } catch (error: any) {
+    console.error('Error converting AI prompt:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to convert AI prompt to rules',
+    });
+  }
+}
+
+export async function previewAudience(req: Request, res: Response): Promise<void> {
+  try {
+    const parsed = previewAudienceSchema.parse(req.body);
+    const { rules } = parsed;
+    
+    // Validate rules first
+    const validation = SqlEvaluator.validateRulesForSql(rules);
+    if (!validation.isValid) {
+      res.status(400).json({
+        success: false,
+        error: validation.error || 'Invalid rules format',
+      });
+    }
+
+    const count = await SqlEvaluator.getAudienceCount(prisma, rules);
+    
+    res.json({
+      success: true,
+      data: {
+        count,
+        rules
+      },
+    });
+  } catch (error: any) {
+    console.error('Error previewing audience:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to preview audience',
+    });
+  }
+}
+
+export async function getMatchingCustomers(req: Request, res: Response): Promise<void> {
+  try {
+    const { rules } = req.body;
+    const { page = 1, limit = 10 } = req.query;
+    
+    // Validate rules first
+    const validation = SqlEvaluator.validateRulesForSql(rules);
+    if (!validation.isValid) {
+      res.status(400).json({
+        success: false,
+        error: validation.error || 'Invalid rules format',
+      });
+    }
+
+    const result = await SqlEvaluator.getAudience(
+      prisma,
+      rules,
+      Number(page),
+      Number(limit)
+    );
+    
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    console.error('Error getting matching customers:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get matching customers',
+    });
+  }
+}
+
+// Helper function to convert text prompts to rules
+function convertTextToRules(prompt: string): any {
+  const lowerPrompt = prompt.toLowerCase();
+  
+  // Simple pattern matching for common phrases
+  if (lowerPrompt.includes('visits') && lowerPrompt.includes('>')) {
+    const match = prompt.match(/>\s*(\d+)/);
+    if (match) {
+      return {
+        field: 'visits_count',
+        operator: '>',
+        value: parseInt(match[1])
+      };
+    }
+  }
+  
+  if (lowerPrompt.includes('spent') || lowerPrompt.includes('spend')) {
+    const amountMatch = prompt.match(/(\d+(?:,\d{3})*(?:\.\d{2})?)/);
+    if (amountMatch) {
+      const amount = parseFloat(amountMatch[1].replace(/,/g, ''));
+      return {
+        field: 'total_spend',
+        operator: lowerPrompt.includes('more') || lowerPrompt.includes('>') ? '>' : '<',
+        value: amount
+      };
+    }
+  }
+  
+  if (lowerPrompt.includes('inactive') && lowerPrompt.includes('month')) {
+    const monthMatch = prompt.match(/(\d+)\s*month/);
+    if (monthMatch) {
+      const months = parseInt(monthMatch[1]);
+      const cutoffDate = new Date();
+      cutoffDate.setMonth(cutoffDate.getMonth() - months);
+      return {
+        field: 'last_active',
+        operator: '<',
+        value: cutoffDate.toISOString().split('T')[0]
+      };
+    }
+  }
+  
+  // Default fallback
+  return {
+    field: 'total_spend',
+    operator: '>',
+    value: 0
+  };
 }

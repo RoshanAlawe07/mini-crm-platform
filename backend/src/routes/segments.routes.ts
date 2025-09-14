@@ -8,7 +8,10 @@ import {
   getSegmentCustomers,
   validateRules,
   getAudienceCount,
-  generateSqlQuery
+  generateSqlQuery,
+  aiHelperConvert,
+  previewAudience,
+  getMatchingCustomers
 } from '../controllers/segments.controller';
 
 const router = Router();
@@ -27,5 +30,10 @@ router.get('/:id/customers', getSegmentCustomers);
 router.post('/validate-rules', validateRules);
 router.post('/audience-count', getAudienceCount);
 router.post('/generate-sql', generateSqlQuery);
+
+// AI Helper and Preview functionality
+router.post('/ai-helper', aiHelperConvert);
+router.post('/preview', previewAudience);
+router.post('/matching-customers', getMatchingCustomers);
 
 export default router;

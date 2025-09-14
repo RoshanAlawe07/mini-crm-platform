@@ -1,6 +1,50 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Home() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check authentication status
+    const authStatus = localStorage.getItem('isAuthenticated');
+    setIsAuthenticated(authStatus === 'true');
+    setIsLoading(false);
+    
+    // Only redirect to signup if not authenticated
+    if (authStatus !== 'true') {
+      router.push('/signup');
+    }
+  }, [router]);
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h2>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show loading (will redirect to signup)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Redirecting to Sign Up...</h2>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -27,9 +71,18 @@ export default function Home() {
        </nav>
         </div>
         
-        {/* Right side - Logout Button */}
-        <button className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" style={{marginRight: '70px'}}>
-          Logout
+        {/* Right side - Sign Out Button */}
+        <button 
+          onClick={() => {
+            localStorage.removeItem('isAuthenticated');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            router.push('/signin');
+          }}
+          className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" 
+          style={{marginRight: '70px'}}
+        >
+          Sign Out
         </button>
       </header>
 

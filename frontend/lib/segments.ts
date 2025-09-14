@@ -27,12 +27,14 @@ export interface Segment {
 
 export interface CreateSegmentData {
   name: string;
+  description?: string;
   rulesJson: string;
   createdBy: string;
 }
 
 export interface UpdateSegmentData {
   name: string;
+  description?: string;
   rulesJson: string;
 }
 
@@ -105,6 +107,24 @@ export const segmentsApi = {
   // Generate SQL query for rules
   generateSqlQuery: async (rules: RulesGroup | Rule): Promise<{ success: boolean; data: { sql: string; countSql: string; rules: RulesGroup | Rule } }> => {
     const response = await api.post('/api/segments/generate-sql', { rules });
+    return response.data;
+  },
+
+  // AI Helper - Convert text prompt to rules
+  aiHelperConvert: async (prompt: string): Promise<{ success: boolean; data: { rules: RulesGroup | Rule; originalPrompt: string } }> => {
+    const response = await api.post('/api/segments/ai-helper', { prompt });
+    return response.data;
+  },
+
+  // Preview audience with rules
+  previewAudience: async (rules: RulesGroup | Rule): Promise<{ success: boolean; data: { count: number; rules: RulesGroup | Rule } }> => {
+    const response = await api.post('/api/segments/preview', { rules });
+    return response.data;
+  },
+
+  // Get matching customers for rules
+  getMatchingCustomers: async (rules: RulesGroup | Rule, page: number = 1, limit: number = 10): Promise<SegmentCustomersResponse> => {
+    const response = await api.post(`/api/segments/matching-customers?page=${page}&limit=${limit}`, { rules });
     return response.data;
   }
 };

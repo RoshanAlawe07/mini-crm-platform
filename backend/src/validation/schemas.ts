@@ -45,6 +45,7 @@ export const segmentRulesSchema = rulesGroupSchema;
 
 export const segmentSchema = z.object({
   name: z.string().min(1, "Segment name is required"),
+  description: z.string().optional(),
   rulesJson: z.string().refine((val) => {
     try {
       const parsed = JSON.parse(val);
@@ -62,4 +63,12 @@ export const campaignSchema = z.object({
   name: z.string().min(1, "Campaign name is required"),
   messageTemplate: z.string().optional(),
   scheduledAt: z.string().datetime().optional()
+});
+
+export const aiHelperSchema = z.object({
+  prompt: z.string().min(1, "AI prompt is required")
+});
+
+export const previewAudienceSchema = z.object({
+  rules: z.union([singleRuleSchema, rulesGroupSchema])
 });

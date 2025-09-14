@@ -8,6 +8,9 @@ generator client {
 datasource db {
   provider = "sqlite"
   url      = "file:./dev.db"
+  // For production, change to:
+  // provider = "postgresql"
+  // url      = env("DATABASE_URL")
 }
 
 model User {
@@ -15,6 +18,7 @@ model User {
   googleId  String?  @unique
   email     String   @unique
   name      String?
+  password  String?  // For email/password authentication
   picture   String?
   role      String   @default("USER")
   isActive  Boolean  @default(true)
@@ -60,12 +64,13 @@ model Order {
 }
 
 model Segment {
-  id        String   @id @default(cuid())
-  name      String
-  rulesJson String   // JSON string containing the rules format
-  createdBy String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  description String?  // Optional description field
+  rulesJson   String   // JSON string containing the rules format
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
   campaigns Campaign[]
