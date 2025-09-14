@@ -19,17 +19,19 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const customersResponse = await fetch('http://localhost:3001/api/customers');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      
+      const customersResponse = await fetch(`${apiUrl}/api/customers`);
       const customersData = await customersResponse.json();
       const totalCustomers = customersData.customers ? customersData.customers.length : 0;
 
-      const campaignsResponse = await fetch('http://localhost:3001/api/campaigns');
+      const campaignsResponse = await fetch(`${apiUrl}/api/campaigns`);
       const campaignsData = await campaignsResponse.json();
       const activeCampaigns = campaignsData.success 
         ? campaignsData.data.filter((campaign: any) => campaign.status === 'ACTIVE' || campaign.status === 'SCHEDULED').length 
         : 0;
 
-      const ordersResponse = await fetch('http://localhost:3001/api/orders');
+      const ordersResponse = await fetch(`${apiUrl}/api/orders`);
       const ordersData = await ordersResponse.json();
       const totalIncome = ordersData.orders 
         ? ordersData.orders.reduce((sum: number, order: any) => sum + (order.amount || 0), 0)

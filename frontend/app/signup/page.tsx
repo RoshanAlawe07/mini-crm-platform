@@ -30,7 +30,8 @@ export default function SignUp() {
     }
     
     try {
-      const response = await fetch('http://localhost:3001/api/auth/signup', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
