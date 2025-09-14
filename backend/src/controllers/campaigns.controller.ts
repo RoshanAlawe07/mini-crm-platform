@@ -173,34 +173,54 @@ export async function createCampaign(req: Request, res: Response): Promise<void>
       },
     });
 
-    // If campaign is not DRAFT, send messages to customers
+    // If campaign is not DRAFT, send messages to customers automatically
     if (campaign.status !== 'DRAFT' && campaign.messageTemplate) {
+      console.log(`🚀 Campaign ${campaign.id} is ${campaign.status}, auto-sending messages...`);
       let customerIds = [];
       
       if (segmentId) {
+        console.log(`📊 Getting customers from segment: ${segmentId}`);
         // Get customers from segment
         const segment = await prisma.segment.findUnique({
           where: { id: segmentId }
         });
         
         if (segment) {
+          console.log(`📊 Found segment: ${segment.name}`);
+          console.log(`📊 Segment rules JSON: ${segment.rulesJson}`);
           const rules = JSON.parse(segment.rulesJson);
+          console.log(`📊 Parsed rules:`, rules);
           const result = await SqlEvaluator.getAudience(prisma, rules);
+          console.log(`📊 SqlEvaluator result:`, result);
           customerIds = result.customers.map((c: any) => c.id);
+          console.log(`📊 Found ${customerIds.length} customers in segment`);
+        } else {
+          console.log(`❌ Segment not found: ${segmentId}`);
         }
       } else {
+        console.log(`📊 No segment specified, getting all customers`);
         // Get all customers if no segment
         const allCustomers = await prisma.customer.findMany({
           select: { id: true }
         });
         customerIds = allCustomers.map(c => c.id);
+        console.log(`📊 Found ${customerIds.length} total customers`);
       }
       
       // Simulate sending messages
       if (customerIds.length > 0) {
         console.log(`🚀 Auto-sending messages for campaign ${campaign.id} to ${customerIds.length} customers`);
-        await simulateMessageSending(campaign.id, customerIds, campaign.messageTemplate);
+        try {
+          await simulateMessageSending(campaign.id, customerIds, campaign.messageTemplate);
+          console.log(`✅ Successfully sent messages for campaign ${campaign.id}`);
+        } catch (error) {
+          console.error(`❌ Error sending messages for campaign ${campaign.id}:`, error);
+        }
+      } else {
+        console.log(`⚠️  No customers found to send messages to for campaign ${campaign.id}`);
       }
+    } else {
+      console.log(`ℹ️  Campaign ${campaign.id} is ${campaign.status}, not auto-sending messages`);
     }
 
     res.status(201).json({

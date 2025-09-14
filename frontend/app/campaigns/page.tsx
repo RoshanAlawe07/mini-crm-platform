@@ -33,7 +33,10 @@ export default function CampaignsPage() {
       const response = await fetch(`${apiUrl}/api/campaigns`);
       const data = await response.json();
       
+      console.log('📊 Campaigns API Response:', data);
+      
       if (data.success) {
+        console.log('📊 Campaigns data:', data.data);
         setCampaigns(data.data || []);
       } else {
         console.error('Error fetching campaigns:', data.error);
@@ -151,6 +154,9 @@ function Header() {
 }
 
 function CampaignCard({ campaign }: { campaign: any }) {
+  console.log('📊 CampaignCard received campaign:', campaign);
+  console.log('📊 Campaign messageStats:', campaign.messageStats);
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DRAFT': return 'bg-gray-100 text-gray-800';
@@ -255,7 +261,7 @@ function CampaignCard({ campaign }: { campaign: any }) {
           {/* Message Statistics */}
           <div className="mt-3 p-3 bg-gray-50 rounded-lg">
             <h4 className="text-sm font-medium text-gray-700 mb-2">Message Statistics</h4>
-            {campaign.messageStats && campaign.messageStats.total > 0 ? (
+            {campaign.messageStats ? (
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Messages:</span>
@@ -281,11 +287,16 @@ function CampaignCard({ campaign }: { campaign: any }) {
                   <span className="text-gray-600">Failure Rate:</span>
                   <span className="font-medium text-red-600">{campaign.messageStats.failureRate}</span>
                 </div>
+                {campaign.messageStats.total === 0 && (
+                  <div className="col-span-2 text-center py-2 mt-2">
+                    <p className="text-xs text-gray-500">No messages sent yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Click "Send Messages" to start the campaign</p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-2">
-                <p className="text-sm text-gray-500">No messages sent yet</p>
-                <p className="text-xs text-gray-400 mt-1">Click "Send Messages" to start the campaign</p>
+                <p className="text-sm text-gray-500">Loading statistics...</p>
               </div>
             )}
           </div>
