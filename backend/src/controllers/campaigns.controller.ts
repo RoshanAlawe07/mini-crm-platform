@@ -13,12 +13,36 @@ function generateMessageId(): string {
 
 // Helper function to create communication log safely
 async function createCommunicationLog(data: any) {
-  return await prisma.communicationLog.create({
-    data: {
-      ...data,
-      messageId: data.messageId || generateMessageId()
+  try {
+    console.log(`📝 Creating communication log for customer: ${data.customerId}`);
+    const result = await prisma.communicationLog.create({
+      data: {
+        ...data,
+        messageId: data.messageId || generateMessageId()
+      }
+    });
+    console.log(`✅ Communication log created: ${result.id}`);
+    return result;
+  } catch (error: any) {
+    console.error('❌ Error creating communication log:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      data: data
+    });
+    
+    // If messageId column doesn't exist, try without it
+    if (error.code === 'P2022' && error.meta?.column === 'messageId') {
+      console.log('⚠️  messageId column not found, creating log without it');
+      const { messageId, ...dataWithoutMessageId } = data;
+      return await prisma.communicationLog.create({
+        data: dataWithoutMessageId
+      });
     }
-  });
+    throw error;
+  }
 }
 
 // Simulate message sending with realistic success/failure rates
@@ -205,6 +229,7 @@ export async function getAllCampaigns(req: Request, res: Response): Promise<void
 export async function sendMessages(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
+    console.log(`📤 Starting sendMessages for campaign: ${id}`);
     
     const campaign = await prisma.campaign.findUnique({
       where: { id },
@@ -214,6 +239,7 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
     });
     
     if (!campaign) {
+      console.log(`❌ Campaign not found: ${id}`);
       res.status(404).json({
         success: false,
         error: 'Campaign not found'
@@ -222,6 +248,7 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
     }
     
     if (!campaign.messageTemplate) {
+      console.log(`❌ Campaign has no message template: ${id}`);
       res.status(400).json({
         success: false,
         error: 'Campaign has no message template'
@@ -232,6 +259,7 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
     let customerIds = [];
     
     if (campaign.segmentId) {
+      console.log(`📊 Getting customers from segment: ${campaign.segmentId}`);
       // Get customers from segment
       const segment = await prisma.segment.findUnique({
         where: { id: campaign.segmentId }
@@ -241,38 +269,70 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
         const rules = JSON.parse(segment.rulesJson);
         const result = await SqlEvaluator.getAudience(prisma, rules);
         customerIds = result.customers.map((c: any) => c.id);
+        console.log(`📊 Found ${customerIds.length} customers in segment`);
       }
     } else {
+      console.log(`📊 Getting all customers (no segment)`);
       // Get all customers if no segment
       const allCustomers = await prisma.customer.findMany({
         select: { id: true }
       });
       customerIds = allCustomers.map(c => c.id);
+      console.log(`📊 Found ${customerIds.length} total customers`);
     }
     
     // Simulate sending messages
     if (customerIds.length > 0) {
-      await simulateMessageSending(campaign.id, customerIds, campaign.messageTemplate);
-      
-      res.json({
-        success: true,
-        message: `Messages sent to ${customerIds.length} customers`,
-        data: {
-          campaignId: campaign.id,
-          messagesSent: customerIds.length
-        }
-      });
+      console.log(`📤 Simulating message sending to ${customerIds.length} customers`);
+      try {
+        await simulateMessageSending(campaign.id, customerIds, campaign.messageTemplate);
+        console.log(`✅ Successfully sent messages to ${customerIds.length} customers`);
+        
+        res.json({
+          success: true,
+          message: `Messages sent to ${customerIds.length} customers`,
+          data: {
+            campaignId: campaign.id,
+            messagesSent: customerIds.length
+          }
+        });
+      } catch (simulateError: any) {
+        console.error('❌ Error in simulateMessageSending:', simulateError);
+        console.error('Error details:', {
+          name: simulateError.name,
+          message: simulateError.message,
+          code: simulateError.code,
+          meta: simulateError.meta
+        });
+        
+        res.status(500).json({
+          success: false,
+          error: 'Failed to simulate message sending',
+          details: process.env.NODE_ENV === 'development' ? simulateError.message : undefined
+        });
+        return;
+      }
     } else {
+      console.log(`❌ No customers found to send messages to`);
       res.status(400).json({
         success: false,
         error: 'No customers found to send messages to'
       });
     }
   } catch (error: any) {
-    console.error('Error sending messages:', error);
+    console.error('❌ Error in sendMessages:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
+    
     res.status(500).json({
       success: false,
-      error: 'Failed to send messages'
+      error: 'Failed to send messages',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 }
