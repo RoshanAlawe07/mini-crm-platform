@@ -1,8 +1,8 @@
 
-import { Worker } from "bullmq";
-import { redisConnection, prisma } from "../services/db.service";
+// import { Worker } from "bullmq";
+// import { redisConnection, prisma } from "../services/db.service";
 
-export const customerWorker = new Worker(
+// export const customerWorker = new Worker(
   "ingest-customers",
   async (job: any) => {
     const { name, email, phone, total_spend, last_active, visits_count } = job.data;
@@ -27,5 +27,5 @@ export const customerWorker = new Worker(
       },
     });
   },
-  { connection: redisConnection }
-);
+  // { connection: redisConnection }
+// );

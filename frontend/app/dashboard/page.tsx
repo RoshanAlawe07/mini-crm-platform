@@ -19,19 +19,16 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch customers count
       const customersResponse = await fetch('http://localhost:3001/api/customers');
       const customersData = await customersResponse.json();
       const totalCustomers = customersData.customers ? customersData.customers.length : 0;
 
-      // Fetch campaigns count (active campaigns - SCHEDULED and ACTIVE)
       const campaignsResponse = await fetch('http://localhost:3001/api/campaigns');
       const campaignsData = await campaignsResponse.json();
       const activeCampaigns = campaignsData.success 
         ? campaignsData.data.filter(campaign => campaign.status === 'ACTIVE' || campaign.status === 'SCHEDULED').length 
         : 0;
 
-      // Fetch total income from orders
       const ordersResponse = await fetch('http://localhost:3001/api/orders');
       const ordersData = await ordersResponse.json();
       const totalIncome = ordersData.orders 
@@ -59,11 +56,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200">
-        {/* Left side - Brand and Navigation */}
         <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
-          <Link href="/" className="font-bold text-black" style={{fontSize: '8rem'}}>XenoCRM</Link>
+          <Link href="/" className="font-bold text-black text-base">XenoCRM</Link>
            <nav className="flex space-x-6">
              <Link href="/dashboard" className="text-black font-medium">
                Dashboard
@@ -83,7 +78,6 @@ export default function Dashboard() {
            </nav>
         </div>
         
-        {/* Right side - Sign Out Button */}
         <button 
           onClick={handleSignOut}
           className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" 
@@ -93,7 +87,6 @@ export default function Dashboard() {
         </button>
       </header>
 
-      {/* Main Content */}
       <main className="px-6 py-8">
         <h1 className="text-3xl font-bold text-black mb-6">Dashboard</h1>
         
@@ -106,7 +99,6 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-gray-50 p-6 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Customers</h3>
@@ -122,13 +114,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Combined Chart Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">CRM Overview Dashboard</h3>
               
-              {/* Combined Bar Chart */}
               <div className="h-80 flex items-end justify-center space-x-8">
-                {/* Customers Bar */}
                 <div className="flex flex-col items-center">
                   <div 
                     className="bg-blue-500 w-20 rounded-t-lg transition-all duration-500 hover:bg-blue-600"
@@ -142,7 +131,6 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Campaigns Bar */}
                 <div className="flex flex-col items-center">
                   <div 
                     className="bg-green-500 w-20 rounded-t-lg transition-all duration-500 hover:bg-green-600"
@@ -156,7 +144,6 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Income Bar */}
                 <div className="flex flex-col items-center">
                   <div 
                     className="bg-purple-500 w-20 rounded-t-lg transition-all duration-500 hover:bg-purple-600"
@@ -171,7 +158,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Legend and Additional Info */}
               <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2"></div>
@@ -190,7 +176,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Summary Stats */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>

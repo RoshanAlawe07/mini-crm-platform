@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'FlowCRM',
-  description: 'FlowCRM - Your modern CRM workspace',
+  title: 'XenoCRM',
+  description: 'XenoCRM - Your modern CRM workspace',
 }
 
 export default function RootLayout({

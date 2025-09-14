@@ -43,10 +43,12 @@ export default function Orders() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newOrder, setNewOrder] = useState({
     customerName: '',
-    amount: 0
+    amount: '',
+    status: 'PENDING'
   });
   const [customers, setCustomers] = useState<any[]>([]);
 
+  // Fetch orders from API
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -60,7 +62,9 @@ export default function Orders() {
       if (filters.fromDate) params.append('fromDate', filters.fromDate);
       if (filters.toDate) params.append('toDate', filters.toDate);
       
+      console.log('Fetching orders with params:', params.toString());
       const response = await api.get(`/api/orders?${params.toString()}`);
+      console.log('Orders fetched successfully:', response.data);
       
       setOrders(response.data.orders || []);
       setPagination(response.data.pagination || {
@@ -72,18 +76,20 @@ export default function Orders() {
         hasPrev: false
       });
     } catch (err: any) {
+      console.error('Error fetching orders:', err);
       setError(err.response?.data?.error || err.message || 'Failed to fetch orders');
     } finally {
       setLoading(false);
     }
   };
 
+  // Fetch customers for dropdown
   const fetchCustomers = async () => {
     try {
       const response = await api.get('/api/customers?limit=1000');
       setCustomers(response.data.customers || []);
     } catch (err) {
-      // Handle error silently
+      console.error('Error fetching customers:', err);
     }
   };
 
@@ -110,33 +116,45 @@ export default function Orders() {
       
       const orderData = {
         customerId: customer.id,
-        amount: newOrder.amount
+        amount: parseFloat(newOrder.amount),
+        status: newOrder.status
       };
       
-      const response = await api.post('/api/orders', orderData);
+      console.log('Sending order data:', orderData);
+      console.log('Customer found:', customer);
+      console.log('Customer ID type:', typeof customer.id);
       
-      setNewOrder({ customerName: '', amount: 0 });
+      const response = await api.post('/api/orders', orderData);
+      console.log('Order added successfully:', response.data);
+      
+      setNewOrder({ customerName: '', amount: '', status: 'PENDING' });
       setShowAddForm(false);
       
+      // Refresh the orders list immediately
       await fetchOrders();
       
+      // Trigger customer data refresh in other tabs/windows
       window.dispatchEvent(new CustomEvent('orderAdded', { 
-        detail: { customerId: customer.id, amount: newOrder.amount } 
+        detail: { customerId: customer.id, amount: amount } 
       }));
       
+      // Show success message
       setError(null);
     } catch (err: any) {
+      console.error('Error adding order:', err);
       setError(err.response?.data?.error || err.message || 'Failed to add order');
     } finally {
       setLoading(false);
     }
   };
 
+  // Apply filters
   const handleApplyFilters = () => {
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
     fetchOrders();
   };
 
+  // Handle pagination
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
     setTimeout(() => {
@@ -155,29 +173,36 @@ export default function Orders() {
       setError(null);
       
       await api.delete(`/api/orders/${orderId}`);
+      console.log('Order deleted successfully');
       
+      // Trigger customer data refresh in other tabs/windows
       window.dispatchEvent(new CustomEvent('orderDeleted', { 
         detail: { orderId } 
       }));
       
       fetchOrders();
     } catch (err: any) {
+      console.error('Error deleting order:', err);
       setError(err.response?.data?.error || err.message || 'Failed to delete order');
     } finally {
       setLoading(false);
     }
   };
 
+  // Load orders and customers on component mount
   useEffect(() => {
+    console.log('Orders page mounted, fetching orders...');
     fetchOrders();
     fetchCustomers();
   }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header */}
       <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200 bg-white">
+        {/* Left side - Brand and Navigation */}
         <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
-          <Link href="/" className="text-2xl font-bold text-black">XenoCRM</Link>
+          <Link href="/" className="text-2xl font-bold text-black">FlowCRM®</Link>
           <nav className="flex space-x-6">
             <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors">
               Dashboard
@@ -197,13 +222,16 @@ export default function Orders() {
           </nav>
         </div>
         
+        {/* Right side - Logout Button */}
         <button className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" style={{marginRight: '70px'}}>
           Logout
         </button>
       </header>
 
+      {/* Main Content */}
       <main className="px-12 py-8">
         <div className="max-w-7xl mx-auto">
+          {/* Page Header */}
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
             <button 
@@ -216,6 +244,8 @@ export default function Orders() {
               Add New Order
             </button>
           </div>
+        
+          {/* Filter Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <div className="flex items-center gap-4">
               <div className="flex-1">
@@ -262,11 +292,14 @@ export default function Orders() {
             </div>
           </div>
 
+          {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
               {error}
             </div>
           )}
+
+          {/* Data Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             {loading ? (
               <div className="flex items-center justify-center py-12">
@@ -286,6 +319,7 @@ export default function Orders() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
+                      {console.log('Rendering orders:', orders, 'Length:', orders?.length)}
                       {!orders || orders.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
@@ -332,6 +366,7 @@ export default function Orders() {
                   </table>
                 </div>
 
+                {/* Pagination */}
                 <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
                   <div className="text-sm text-gray-700">
                     Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} results
@@ -347,6 +382,7 @@ export default function Orders() {
                       </svg>
                     </button>
                     
+                    {/* Page numbers */}
                     {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                       const pageNum = Math.max(1, pagination.page - 2) + i;
                       if (pageNum > pagination.totalPages) return null;
@@ -383,6 +419,7 @@ export default function Orders() {
         </div>
       </main>
 
+      {/* Add Order Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
@@ -414,8 +451,22 @@ export default function Orders() {
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                   value={newOrder.amount}
-                  onChange={(e) => setNewOrder(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                  onChange={(e) => setNewOrder(prev => ({ ...prev, amount: e.target.value }))}
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                  value={newOrder.status}
+                  onChange={(e) => setNewOrder(prev => ({ ...prev, status: e.target.value }))}
+                >
+                  <option value="PENDING">Pending</option>
+                  <option value="PROCESSING">Processing</option>
+                  <option value="SHIPPED">Shipped</option>
+                  <option value="DELIVERED">Delivered</option>
+                  <option value="CANCELLED">Cancelled</option>
+                </select>
               </div>
               <div className="flex gap-3 pt-4">
                 <button

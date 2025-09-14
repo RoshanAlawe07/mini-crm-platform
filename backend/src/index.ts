@@ -50,19 +50,19 @@ import authRoutes from './routes/auth';
 import customersRoutes from './routes/customers.routes';
 import ordersRoutes from './routes/orders.routes';
 import segmentsRoutes from './routes/segments.routes';
-// import campaignsRoutes from './routes/campaigns.routes';
+import campaignsRoutes from './routes/campaigns.routes';
 import deliveryReceiptRoutes from './routes/deliveryReceipt.routes';
 import aiRoutes from './routes/ai.routes';
 
 // Import workers
-// import './workers/campaign.worker'; // Commented out to avoid Redis dependency
+// import './workers/campaign.worker';
 
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/segments', segmentsRoutes);
-// app.use('/api/campaigns', campaignsRoutes);
+app.use('/api/campaigns', campaignsRoutes);
 app.use('/api/delivery-receipt', deliveryReceiptRoutes);
 app.use('/api/ai', aiRoutes);
 // app.use('/api/users', userRoutes);

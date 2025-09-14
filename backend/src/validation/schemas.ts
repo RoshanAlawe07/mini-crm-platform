@@ -66,9 +66,11 @@ export const campaignSchema = z.object({
 });
 
 export const aiHelperSchema = z.object({
-  prompt: z.string().min(1, "AI prompt is required")
+  query: z.string().min(1, "Query is required"),
+  prompt: z.string().min(1, "Prompt is required")
 });
 
 export const previewAudienceSchema = z.object({
-  rules: z.union([singleRuleSchema, rulesGroupSchema])
+  rulesJson: z.string().min(1, "Rules JSON is required"),
+  rules: z.any().optional()
 });

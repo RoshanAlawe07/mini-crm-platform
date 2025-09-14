@@ -8,7 +8,8 @@ import {
   getCampaignAudience,
   launchCampaign,
   getCampaignStats,
-  sendCampaign
+  sendCampaign,
+  sendMessages
 } from '../controllers/campaigns.controller';
 
 const router = Router();
@@ -24,6 +25,7 @@ router.delete('/:id', deleteCampaign);
 router.get('/:id/audience', getCampaignAudience);
 router.post('/:id/launch', launchCampaign);
 router.post('/:id/send', sendCampaign);
+router.post('/:id/send-messages', sendMessages);
 router.get('/:id/stats', getCampaignStats);
 
 export default router;

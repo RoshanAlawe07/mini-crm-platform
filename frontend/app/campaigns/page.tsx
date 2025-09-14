@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function CampaignsPage() {
+  const router = useRouter();
   const [currentView, setCurrentView] = useState<'list' | 'create'>('list');
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [segments, setSegments] = useState<any[]>([]);
@@ -105,6 +107,8 @@ export default function CampaignsPage() {
 }
 
 function Header() {
+  const router = useRouter();
+  
   return (
     <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200">
       <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
@@ -128,8 +132,17 @@ function Header() {
         </nav>
       </div>
       
-      <button className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" style={{marginRight: '70px'}}>
-        Logout
+      <button 
+        onClick={() => {
+          localStorage.removeItem('isAuthenticated');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          router.push('/signin');
+        }}
+        className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" 
+        style={{marginRight: '70px'}}
+      >
+        Sign Out
       </button>
     </header>
   );
@@ -190,6 +203,28 @@ function CampaignCard({ campaign }: { campaign: any }) {
     }
   };
 
+  const handleSendMessages = async () => {
+    if (confirm(`Are you sure you want to send messages for "${campaign.name}"?`)) {
+      try {
+        const response = await fetch(`http://localhost:3001/api/campaigns/${campaign.id}/send-messages`, {
+          method: 'POST'
+        });
+        
+        if (response.ok) {
+          alert(`Messages sent successfully for "${campaign.name}"!`);
+          // Refresh the campaigns list
+          window.location.reload();
+        } else {
+          const result = await response.json();
+          alert(`Error sending messages: ${result.error || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('Error sending messages:', error);
+        alert('Error sending messages. Please try again.');
+      }
+    }
+  };
+
   return (
     <div className="px-6 py-4 hover:bg-gray-50">
       <div className="flex items-center justify-between">
@@ -211,10 +246,38 @@ function CampaignCard({ campaign }: { campaign: any }) {
           <p className="text-xs text-gray-400 mt-1">
             Created: {new Date(campaign.createdAt).toLocaleDateString()}
           </p>
-          {campaign.communicationLogs && campaign.communicationLogs.length > 0 && (
-            <p className="text-xs text-green-600 mt-1">
-              📧 Sent to {campaign.communicationLogs.length} customers
-            </p>
+          
+          {/* Message Statistics */}
+          {campaign.messageStats && (
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Message Statistics</h4>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Messages:</span>
+                  <span className="font-medium">{campaign.messageStats.total}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-green-600">Delivered:</span>
+                  <span className="font-medium text-green-600">{campaign.messageStats.sent}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-red-600">Failed:</span>
+                  <span className="font-medium text-red-600">{campaign.messageStats.failed}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-yellow-600">Pending:</span>
+                  <span className="font-medium text-yellow-600">{campaign.messageStats.pending}</span>
+                </div>
+                <div className="flex justify-between col-span-2">
+                  <span className="text-gray-600">Success Rate:</span>
+                  <span className="font-medium text-green-600">{campaign.messageStats.successRate}</span>
+                </div>
+                <div className="flex justify-between col-span-2">
+                  <span className="text-gray-600">Failure Rate:</span>
+                  <span className="font-medium text-red-600">{campaign.messageStats.failureRate}</span>
+                </div>
+              </div>
+            </div>
           )}
         </div>
         <div className="flex space-x-2">
@@ -224,6 +287,14 @@ function CampaignCard({ campaign }: { campaign: any }) {
               className="text-green-600 hover:text-green-800 text-sm font-medium"
             >
               Launch
+            </button>
+          )}
+          {campaign.status !== 'DRAFT' && (!campaign.messageStats || campaign.messageStats.total === 0) && (
+            <button 
+              onClick={handleSendMessages}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              Send Messages
             </button>
           )}
           <button 
@@ -264,18 +335,18 @@ function CreateCampaignPage({
       const segment = segments.find(s => s.id === targetSegment);
       
       if (segment && segment.name.toLowerCase().includes('high value')) {
-        suggestion = "🎉 Exclusive VIP offer! As one of our most valued customers, enjoy 25% off your next purchase. Use code VIP25 - valid for 48 hours only!";
+        suggestion = "🎉 Exclusive VIP Offer for Our Most Valued Customers!\n\nDear Valued Customer,\n\nAs one of our most important customers, we're thrilled to offer you an exclusive 25% discount on your next purchase. This special VIP offer is valid for 48 hours only and includes free express shipping on orders over $100.\n\nUse code: VIP25\n\nThank you for your continued loyalty and trust in our brand. We appreciate your business and look forward to serving you again soon!\n\nBest regards,\nThe XenoCRM Team";
       } else if (segment && segment.name.toLowerCase().includes('inactive')) {
-        suggestion = "We miss you! 💔 Here's a special welcome back offer - 20% off everything + free shipping. Don't miss out!";
+        suggestion = "We Miss You! 💔 Special Welcome Back Offer\n\nHi there!\n\nWe noticed you haven't visited us in a while, and we wanted to reach out with a special welcome back offer just for you. We're offering 20% off everything in our store plus free shipping on any order over $50.\n\nThis offer is valid for the next 7 days, so don't miss out on the chance to rediscover our amazing products at an incredible price!\n\nUse code: WELCOME20\n\nWe hope to see you back soon!\n\nWarm regards,\nThe XenoCRM Team";
       } else if (segment && segment.name.toLowerCase().includes('new')) {
-        suggestion = "Welcome to our family! 🌟 Get started with 15% off your first order. Use code WELCOME15 at checkout.";
+        suggestion = "Welcome to Our Family! 🌟 First Order Special\n\nWelcome to XenoCRM!\n\nWe're so excited to have you join our community of satisfied customers. To help you get started, we're offering you 15% off your very first order with us.\n\nThis welcome discount is our way of saying thank you for choosing us, and we're confident you'll love the quality and service we provide.\n\nUse code: WELCOME15\n\nHappy shopping!\n\nBest regards,\nThe XenoCRM Team";
       } else {
         const suggestions = [
-          "🎉 Special offer just for you! Get 20% off your next purchase. Use code SAVE20 at checkout.",
-          "Hi! We noticed you haven't visited us lately. Here's a special welcome back offer with 15% off!",
-          "Thank you for being a valued customer! Enjoy this exclusive 25% discount on your next order.",
-          "Don't miss out! Limited time offer - 30% off everything in our store. Shop now!",
-          "🌟 Flash sale alert! Get 30% off everything for the next 24 hours. Shop now before it's gone!"
+          "🎉 Special Limited-Time Offer Just for You!\n\nDear Customer,\n\nWe're excited to offer you an exclusive 20% discount on your next purchase. This special offer is valid for the next 5 days and includes free standard shipping on orders over $75.\n\nUse code: SAVE20\n\nDon't miss out on this amazing opportunity to save on our premium products!\n\nBest regards,\nThe XenoCRM Team",
+          "Hi! We Miss You - Special Welcome Back Offer\n\nDear Valued Customer,\n\nWe noticed you haven't visited us lately, and we wanted to reach out with a special welcome back offer. Enjoy 15% off everything in our store with free shipping on orders over $60.\n\nThis offer is valid for the next 10 days, so take advantage of these great savings while you can!\n\nUse code: WELCOME15\n\nWe hope to see you back soon!\n\nWarm regards,\nThe XenoCRM Team",
+          "Thank You for Being a Valued Customer!\n\nDear Customer,\n\nWe want to express our gratitude for your continued support and trust in our brand. As a token of our appreciation, we're offering you an exclusive 25% discount on your next order.\n\nThis special discount is valid for the next 7 days and includes free express shipping on orders over $100.\n\nUse code: THANKYOU25\n\nThank you for choosing us!\n\nBest regards,\nThe XenoCRM Team",
+          "Don't Miss Out! Limited Time Flash Sale\n\nDear Customer,\n\nWe're excited to announce a limited-time flash sale with incredible savings! Get 30% off everything in our store for the next 24 hours only.\n\nThis is one of our biggest sales of the year, so don't wait - shop now and save big on all your favorite products!\n\nUse code: FLASH30\n\nHappy shopping!\n\nBest regards,\nThe XenoCRM Team",
+          "🌟 Flash Sale Alert - 30% Off Everything!\n\nDear Customer,\n\nWe're having a massive flash sale and you're invited! Get 30% off everything in our store for the next 24 hours only.\n\nThis incredible offer includes free shipping on orders over $50 and is valid on all products in our catalog.\n\nUse code: FLASH30\n\nShop now before it's gone!\n\nBest regards,\nThe XenoCRM Team"
         ];
         suggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
       }
@@ -401,14 +472,14 @@ function CreateCampaignPage({
                     Campaign Message
                   </label>
                   <span className="text-xs text-gray-500">
-                    {campaignMessage.length}/250 characters
+                    {campaignMessage.length}/500 characters
                   </span>
                 </div>
                 <textarea
                   value={campaignMessage}
                   onChange={(e) => setCampaignMessage(e.target.value)}
                   placeholder="Enter your campaign message..."
-                  maxLength={250}
+                  maxLength={500}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />

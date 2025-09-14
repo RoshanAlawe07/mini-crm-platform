@@ -1,5 +1,5 @@
-import { Worker } from "bullmq";
-import { redisConnection, prisma } from "../services/db.service";
+// import { Worker } from "bullmq";
+// import { redisConnection, prisma } from "../services/db.service";
 
 // Batch processing configuration
 const BATCH_SIZE = 100;
@@ -82,7 +82,7 @@ function addToBatch(update: typeof pendingUpdates[0]) {
   }
 }
 
-export const campaignWorker = new Worker(
+// export const campaignWorker = new Worker(
   "ingest-campaigns",
   async (job: any) => {
     const { customerId, campaignId, messageId } = job.data;
@@ -118,18 +118,18 @@ export const campaignWorker = new Worker(
       console.warn(`Communication log not found for message ${messageId}`);
     }
   },
-  { connection: redisConnection }
-);
+  // { connection: redisConnection }
+// );
 
 // Handle job completion
-campaignWorker.on('completed', (job) => {
-  console.log(`Campaign job ${job.id} completed`);
-});
+// campaignWorker.on('completed', (job) => {
+//   console.log(`Campaign job ${job.id} completed`);
+// });
 
 // Handle job failure
-campaignWorker.on('failed', (job, err) => {
-  console.error(`Campaign job ${job?.id} failed:`, err);
-});
+// campaignWorker.on('failed', (job, err) => {
+//   console.error(`Campaign job ${job?.id} failed:`, err);
+// });
 
 // Process any remaining updates on shutdown
 process.on('SIGINT', async () => {

@@ -228,6 +228,7 @@ export async function getAudienceCount(req: Request, res: Response): Promise<voi
         success: false,
         error: validation.error || 'Invalid rules format',
       });
+      return;
     }
 
     const count = await SqlEvaluator.getAudienceCount(prisma, rules);
@@ -307,7 +308,10 @@ export async function aiHelperConvert(req: Request, res: Response): Promise<void
 export async function previewAudience(req: Request, res: Response): Promise<void> {
   try {
     const parsed = previewAudienceSchema.parse(req.body);
-    const { rules } = parsed;
+    const { rulesJson } = parsed;
+    
+    // Parse the rules JSON
+    const rules = JSON.parse(rulesJson);
     
     // Validate rules first
     const validation = SqlEvaluator.validateRulesForSql(rules);
@@ -316,6 +320,7 @@ export async function previewAudience(req: Request, res: Response): Promise<void
         success: false,
         error: validation.error || 'Invalid rules format',
       });
+      return;
     }
 
     const count = await SqlEvaluator.getAudienceCount(prisma, rules);

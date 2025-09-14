@@ -1,9 +1,0 @@
-# Architecture Diagram Placeholder
-
-This file will contain the system architecture diagram showing:
-- Frontend (React.js/Next.js)
-- Backend (Node.js/Express.js)
-- Database (PostgreSQL with Prisma)
-- Redis (for queues and caching)
-- File storage
-- External services (email, etc.)

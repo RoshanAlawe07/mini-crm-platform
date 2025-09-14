@@ -24,7 +24,6 @@ export default function SignUp() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate password confirmation
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match');
       return;
@@ -47,12 +46,10 @@ export default function SignUp() {
       const result = await response.json();
       
       if (result.success) {
-        // Store token and user data
         localStorage.setItem('token', result.data.token);
         localStorage.setItem('user', JSON.stringify(result.data.user));
         localStorage.setItem('isAuthenticated', 'true');
         
-        // Redirect to home page
         window.location.href = '/';
       } else {
         alert(`Sign up failed: ${result.error}`);
@@ -68,7 +65,6 @@ export default function SignUp() {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="bg-white rounded-lg shadow-md p-8">
-          {/* Header */}
           <div className="text-center">
             <div className="mx-auto h-12 w-12 bg-gray-800 rounded-lg flex items-center justify-center mb-4">
               <svg className="h-8 w-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -79,8 +75,6 @@ export default function SignUp() {
             <p className="text-gray-600">Sign up to get started</p>
           </div>
 
-
-          {/* Registration Form */}
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -140,7 +134,6 @@ export default function SignUp() {
               />
             </div>
 
-            {/* Terms Agreement */}
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -162,7 +155,6 @@ export default function SignUp() {
               </label>
             </div>
 
-            {/* Sign Up Button */}
             <div>
               <button
                 type="submit"
@@ -173,7 +165,6 @@ export default function SignUp() {
             </div>
           </form>
 
-          {/* Sign In Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{' '}

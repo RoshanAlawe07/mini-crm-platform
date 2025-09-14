@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { segmentsApi, Segment as ApiSegment, RulesGroup, Rule } from '../../lib/segments';
 
 interface LocalRule {
@@ -18,6 +19,7 @@ interface LocalRuleGroup {
 }
 
 export default function SegmentsPage() {
+  const router = useRouter();
   const [segments, setSegments] = useState<ApiSegment[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'list' | 'create'>('list');
@@ -122,6 +124,8 @@ export default function SegmentsPage() {
 }
 
 function Header() {
+  const router = useRouter();
+  
   return (
     <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200">
       <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
@@ -145,8 +149,17 @@ function Header() {
         </nav>
       </div>
       
-      <button className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" style={{marginRight: '70px'}}>
-        Logout
+      <button 
+        onClick={() => {
+          localStorage.removeItem('isAuthenticated');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          router.push('/signin');
+        }}
+        className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" 
+        style={{marginRight: '70px'}}
+      >
+        Sign Out
       </button>
     </header>
   );

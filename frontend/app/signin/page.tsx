@@ -36,12 +36,10 @@ export default function SignIn() {
       const result = await response.json();
       
       if (result.success) {
-        // Store token and user data
         localStorage.setItem('token', result.data.token);
         localStorage.setItem('user', JSON.stringify(result.data.user));
         localStorage.setItem('isAuthenticated', 'true');
         
-        // Redirect to home page
         window.location.href = '/';
       } else {
         alert(`Sign in failed: ${result.error}`);
@@ -57,7 +55,6 @@ export default function SignIn() {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="bg-white rounded-lg shadow-md p-8">
-          {/* Header */}
           <div className="text-center">
             <div className="mx-auto h-12 w-12 bg-gray-800 rounded-lg flex items-center justify-center mb-4">
               <svg className="h-8 w-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -68,8 +65,6 @@ export default function SignIn() {
             <p className="text-gray-600">Sign in to your account</p>
           </div>
 
-
-          {/* Email/Password Form */}
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
               <input
@@ -94,7 +89,6 @@ export default function SignIn() {
               />
             </div>
 
-            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -115,7 +109,6 @@ export default function SignIn() {
               </div>
             </div>
 
-            {/* Sign In Button */}
             <div>
               <button
                 type="submit"
@@ -126,7 +119,6 @@ export default function SignIn() {
             </div>
           </form>
 
-          {/* Sign Up Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}

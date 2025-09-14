@@ -10,18 +10,15 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication status
     const authStatus = localStorage.getItem('isAuthenticated');
     setIsAuthenticated(authStatus === 'true');
     setIsLoading(false);
     
-    // Only redirect to signup if not authenticated
     if (authStatus !== 'true') {
       router.push('/signup');
     }
   }, [router]);
 
-  // Show loading while checking authentication
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -33,7 +30,6 @@ export default function Home() {
     );
   }
 
-  // If not authenticated, show loading (will redirect to signup)
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -47,11 +43,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200">
-        {/* Left side - Brand and Navigation */}
         <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
-          <h1 className="text-2xl font-bold text-black">XenoCRM</h1>
+          <h1 className="text-base font-bold text-black">XenoCRM</h1>
        <nav className="flex space-x-6">
          <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-gray-100">
            Dashboard
@@ -71,7 +65,6 @@ export default function Home() {
        </nav>
         </div>
         
-        {/* Right side - Sign Out Button */}
         <button 
           onClick={() => {
             localStorage.removeItem('isAuthenticated');
@@ -86,29 +79,24 @@ export default function Home() {
         </button>
       </header>
 
-      {/* Main Content */}
       <main className="flex items-center justify-center min-h-[calc(100vh-80px)]">
         <div className="text-center">
-          {/* Welcome Message */}
           <h2 className="text-5xl font-extrabold text-black -mb-2 font-inter leading-tight">
-            Welcome to FlowCRM.
+            Welcome to XenoCRM.
           </h2>
           <p className="text-5xl text-gray-500 mb-6 font-inter leading-tight font-bold">
             Sign in to your workspace.
           </p>
           
-          {/* Google Login Button */}
           <button className="bg-black text-white px-3 py-1.5 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium mt-2.5">
            XenoCRM
           </button>
         </div>
       </main>
 
-      {/* Additional Section */}
       <section className="py-16 px-12">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left side - Text Content */}
             <div className="space-y-6" style={{marginLeft: '100px'}}>
               <h3 className="text-3xl font-bold text-black">
                 Easy login
@@ -120,7 +108,6 @@ export default function Home() {
               </p>
             </div>
             
-            {/* Right side - UI Element */}
             <div className="flex justify-center">
               <div className="w-[600px] h-[500px] bg-gray-200 rounded-2xl shadow-lg"></div>
             </div>
@@ -128,16 +115,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Access Control Section */}
       <section className="py-16 px-12">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center">
-            {/* Left side - UI Element */}
             <div className="flex justify-center" style={{marginTop: '-100px', marginLeft: '50px'}}>
               <div className="bg-gray-200 rounded-2xl shadow-lg" style={{width: '550px', height: '500px'}}></div>
             </div>
             
-            {/* Right side - Text Content */}
             <div className="space-y-6 text-left" style={{marginLeft: '150px', width: '400px'}}>
               <h3 className="text-3xl font-extrabold text-black">
                 Access control
@@ -151,11 +135,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick Support Section */}
       <section className="py-16 px-12">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center">
-            {/* Left side - Text Content */}
             <div className="space-y-6" style={{width: '400px', marginLeft: '150px'}}>
               <h3 className="text-3xl font-bold text-black">
                 Quick support
@@ -166,7 +148,6 @@ export default function Home() {
               </p>
             </div>
             
-            {/* Right side - UI Element */}
             <div className="flex justify-center" style={{marginTop: '-100px', marginLeft: '260px'}}>
               <div className="w-[570px] h-[500px] bg-gray-200 rounded-2xl shadow-lg"></div>
             </div>
@@ -174,11 +155,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Cards Section */}
       <section className="py-16 px-12">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-center gap-6" style={{marginTop: '50px'}}>
-            {/* Card 1 - Summary */}
             <Link href="/customers" className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8 transition-all duration-300 hover:bg-blue-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
               <div className="text-center space-y-2">
                 <p className="text-sm text-gray-500 font-normal group-hover:text-blue-600 transition-colors duration-300">Summary</p>
@@ -186,7 +165,6 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Card 2 - Insights */}
             <Link href="/orders" className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8 transition-all duration-300 hover:bg-green-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
               <div className="text-center space-y-2">
                 <p className="text-sm text-gray-500 font-normal group-hover:text-green-600 transition-colors duration-300">Insights</p>
@@ -194,7 +172,6 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Card 3 - Automation */}
             <Link href="/campaigns" className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8 transition-all duration-300 hover:bg-purple-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
               <div className="text-center space-y-2">
                 <p className="text-sm text-gray-500 font-normal group-hover:text-purple-600 transition-colors duration-300">Automation</p>
@@ -202,7 +179,6 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Card 4 - Segmentation */}
             <Link href="/segments" className="w-96 h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-8 transition-all duration-300 hover:bg-orange-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
               <div className="text-center space-y-2">
                 <p className="text-sm text-gray-500 font-normal group-hover:text-orange-600 transition-colors duration-300">Segmentation</p>
@@ -213,7 +189,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Ready to Simplify Section */}
       <section className="py-20 px-12" style={{marginTop: '200px'}}>
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-black mb-6">
@@ -231,20 +206,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="py-16 px-12 bg-white" style={{marginTop: '200px'}}>
         <div className="max-w-7xl mx-auto">
           <div className="flex items-start justify-between">
-            {/* Left side - Logo */}
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gray-300 rounded"></div>
               <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
               <div className="w-0 h-0 border-l-[16px] border-r-[16px] border-b-[28px] border-l-transparent border-r-transparent border-b-gray-300"></div>
             </div>
             
-            {/* Right side - Navigation Columns */}
             <div className="flex space-x-16">
-              {/* Platform Column */}
               <div className="space-y-3">
                 <h4 className="text-lg font-bold text-black">Platform</h4>
                 <div className="space-y-2">
@@ -254,7 +225,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Features Column */}
               <div className="space-y-3">
                 <h4 className="text-lg font-bold text-black">Features</h4>
                 <div className="space-y-2">
@@ -264,7 +234,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Support Column */}
               <div className="space-y-3">
                 <h4 className="text-lg font-bold text-black">Support</h4>
                 <div className="space-y-2">
@@ -274,7 +243,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Company Column */}
               <div className="space-y-3">
                 <h4 className="text-lg font-bold text-black">Company</h4>
                 <div className="space-y-2">

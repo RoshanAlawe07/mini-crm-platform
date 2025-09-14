@@ -2,26 +2,105 @@ import { Request, Response } from "express";
 import { campaignSchema } from "../validation/schemas";
 import { PrismaClient } from '@prisma/client';
 import { SqlEvaluator } from '../services/sqlEvaluator.service';
-import { campaignQueue } from '../queues';
+// import { campaignQueue } from '../queues'; // Disabled for now
 
 const prisma = new PrismaClient();
 
+// Simulate message sending with realistic success/failure rates
+async function simulateMessageSending(campaignId: string, customerIds: string[], messageTemplate: string) {
+  const communicationLogs = [];
+  
+  for (const customerId of customerIds) {
+    // Simulate realistic failure rate (around 10-15%)
+    const isSuccess = Math.random() > 0.12; // 88% success rate
+    const status = isSuccess ? 'SENT' : 'FAILED';
+    
+    const log = await prisma.communicationLog.create({
+      data: {
+        campaignId,
+        customerId,
+        message: messageTemplate,
+        status,
+        attempts: 1,
+        lastAttemptAt: new Date(),
+        deliveryReceipt: isSuccess ? JSON.stringify({ delivered: true, timestamp: new Date() }) : JSON.stringify({ error: 'Delivery failed' })
+      }
+    });
+    
+    communicationLogs.push(log);
+  }
+  
+  return communicationLogs;
+}
+
 export async function createCampaign(req: Request, res: Response) {
   try {
-    // For now, use a default user ID. In a real app, this would come from auth middleware
-    const defaultUserId = 'default-user-id';
+    // Create or get default user
+    let defaultUser = await prisma.user.findFirst({
+      where: { email: 'admin@xenocrm.com' }
+    });
+    
+    if (!defaultUser) {
+      defaultUser = await prisma.user.create({
+        data: {
+          email: 'admin@xenocrm.com',
+          name: 'Admin User',
+          role: 'ADMIN'
+        }
+      });
+    }
+    
+    // Validate segmentId if provided
+    let segmentId = null;
+    if (req.body.segmentId) {
+      const segment = await prisma.segment.findUnique({
+        where: { id: req.body.segmentId }
+      });
+      if (segment) {
+        segmentId = req.body.segmentId;
+      }
+    }
     
     const campaign = await prisma.campaign.create({
       data: {
         name: req.body.name,
-        userId: defaultUserId,
-        status: "DRAFT", // or "SCHEDULED"
-        rulesJson: req.body.rules_json, // keep rules for later
-        segmentId: req.body.segmentId,
+        userId: defaultUser.id,
+        status: req.body.status || "DRAFT",
+        rulesJson: req.body.rules_json || '{}',
+        segmentId: segmentId,
         messageTemplate: req.body.messageTemplate,
         scheduledAt: req.body.scheduledAt ? new Date(req.body.scheduledAt) : null,
       },
     });
+
+    // If campaign is not DRAFT, send messages to customers
+    if (campaign.status !== 'DRAFT' && campaign.messageTemplate) {
+      let customerIds = [];
+      
+      if (segmentId) {
+        // Get customers from segment
+        const segment = await prisma.segment.findUnique({
+          where: { id: segmentId }
+        });
+        
+        if (segment) {
+          const rules = JSON.parse(segment.rulesJson);
+          const result = await SqlEvaluator.getAudience(prisma, rules);
+          customerIds = result.customers.map((c: any) => c.id);
+        }
+      } else {
+        // Get all customers if no segment
+        const allCustomers = await prisma.customer.findMany({
+          select: { id: true }
+        });
+        customerIds = allCustomers.map(c => c.id);
+      }
+      
+      // Simulate sending messages
+      if (customerIds.length > 0) {
+        await simulateMessageSending(campaign.id, customerIds, campaign.messageTemplate);
+      }
+    }
 
     res.status(201).json({
       success: true,
@@ -58,15 +137,113 @@ export async function getAllCampaigns(req: Request, res: Response) {
       }
     });
 
+    // Calculate message statistics for each campaign
+    const campaignsWithStats = campaigns.map(campaign => {
+      const totalMessages = campaign.communicationLogs.length;
+      const sentMessages = campaign.communicationLogs.filter(log => log.status === 'SENT').length;
+      const failedMessages = campaign.communicationLogs.filter(log => log.status === 'FAILED').length;
+      const pendingMessages = campaign.communicationLogs.filter(log => log.status === 'PENDING').length;
+      
+      const successRate = totalMessages > 0 ? ((sentMessages / totalMessages) * 100).toFixed(1) : '0.0';
+      const failureRate = totalMessages > 0 ? ((failedMessages / totalMessages) * 100).toFixed(1) : '0.0';
+
+      return {
+        ...campaign,
+        messageStats: {
+          total: totalMessages,
+          sent: sentMessages,
+          failed: failedMessages,
+          pending: pendingMessages,
+          successRate: `${successRate}%`,
+          failureRate: `${failureRate}%`
+        }
+      };
+    });
+
     res.json({
       success: true,
-      data: campaigns,
+      data: campaignsWithStats,
     });
   } catch (error: any) {
     console.error('Error fetching campaigns:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch campaigns',
+    });
+  }
+}
+
+export async function sendMessages(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    
+    const campaign = await prisma.campaign.findUnique({
+      where: { id },
+      include: {
+        segment: true
+      }
+    });
+    
+    if (!campaign) {
+      res.status(404).json({
+        success: false,
+        error: 'Campaign not found'
+      });
+      return;
+    }
+    
+    if (!campaign.messageTemplate) {
+      res.status(400).json({
+        success: false,
+        error: 'Campaign has no message template'
+      });
+      return;
+    }
+    
+    let customerIds = [];
+    
+    if (campaign.segmentId) {
+      // Get customers from segment
+      const segment = await prisma.segment.findUnique({
+        where: { id: campaign.segmentId }
+      });
+      
+      if (segment) {
+        const rules = JSON.parse(segment.rulesJson);
+        const result = await SqlEvaluator.getAudience(prisma, rules);
+        customerIds = result.customers.map((c: any) => c.id);
+      }
+    } else {
+      // Get all customers if no segment
+      const allCustomers = await prisma.customer.findMany({
+        select: { id: true }
+      });
+      customerIds = allCustomers.map(c => c.id);
+    }
+    
+    // Simulate sending messages
+    if (customerIds.length > 0) {
+      await simulateMessageSending(campaign.id, customerIds, campaign.messageTemplate);
+      
+      res.json({
+        success: true,
+        message: `Messages sent to ${customerIds.length} customers`,
+        data: {
+          campaignId: campaign.id,
+          messagesSent: customerIds.length
+        }
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'No customers found to send messages to'
+      });
+    }
+  } catch (error: any) {
+    console.error('Error sending messages:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send messages'
     });
   }
 }
@@ -199,6 +376,7 @@ export async function getCampaignAudience(req: Request, res: Response): Promise<
         success: false,
         error: 'Campaign not found',
       });
+      return;
     }
 
     if (!campaign.segment) {
@@ -206,6 +384,7 @@ export async function getCampaignAudience(req: Request, res: Response): Promise<
         success: false,
         error: 'Campaign has no associated segment',
       });
+      return;
     }
 
     // Parse the segment rules
@@ -255,6 +434,7 @@ export async function launchCampaign(req: Request, res: Response): Promise<void>
         success: false,
         error: 'Campaign not found',
       });
+      return;
     }
 
     if (!campaign.segment) {
@@ -262,6 +442,7 @@ export async function launchCampaign(req: Request, res: Response): Promise<void>
         success: false,
         error: 'Campaign has no associated segment',
       });
+      return;
     }
 
     if (!campaign.messageTemplate) {
@@ -269,6 +450,7 @@ export async function launchCampaign(req: Request, res: Response): Promise<void>
         success: false,
         error: 'Campaign has no message template',
       });
+      return;
     }
 
     // Parse the segment rules
@@ -344,6 +526,7 @@ export async function getCampaignStats(req: Request, res: Response): Promise<voi
         success: false,
         error: 'Campaign not found',
       });
+      return;
     }
 
     const stats = {
@@ -384,6 +567,7 @@ export async function sendCampaign(req: Request, res: Response): Promise<void> {
         success: false,
         error: 'Campaign not found',
       });
+      return;
     }
 
     if (!campaign.rulesJson) {
@@ -391,6 +575,7 @@ export async function sendCampaign(req: Request, res: Response): Promise<void> {
         success: false,
         error: 'Campaign has no rules defined',
       });
+      return;
     }
 
     // Parse rules and query matching customers
@@ -423,11 +608,11 @@ export async function sendCampaign(req: Request, res: Response): Promise<void> {
         },
       });
 
-      await campaignQueue.add("deliverMessage", {
-        campaignId: campaign.id,
-        customerId: customer.id,
-        messageId: log.messageId,
-      });
+      // await campaignQueue.add("deliverMessage", {
+      //   campaignId: campaign.id,
+      //   customerId: customer.id,
+      //   messageId: log.messageId,
+      // });
 
       results.push({
         customerId: customer.id,

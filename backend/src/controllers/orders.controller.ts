@@ -4,34 +4,44 @@ import { orderSchema } from '../validation/schemas';
 
 const prisma = new PrismaClient();
 
+// Generate unique order ID
 function generateOrderId(): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
   return `ORD-${timestamp}-${random}`.toUpperCase();
 }
 
+// Create a new order
 export async function createOrder(req: Request, res: Response) {
   try {
+    // Validate request body
     const validatedData = orderSchema.parse(req.body);
     
+    // Check if customer exists
+    const customerId = validatedData.customerId;
+    
     const customer = await prisma.customer.findUnique({
-      where: { id: validatedData.customerId }
+      where: { 
+        id: customerId
+      }
     });
     
     if (!customer) {
       return res.status(400).json({ 
-        error: 'Customer not found' 
+        error: 'Customer not found. Please provide a valid customer ID or email.' 
       });
     }
     
+    // Generate unique order ID
     const orderId = generateOrderId();
     
+    // Create the order
     const order = await prisma.order.create({
       data: {
         orderId: orderId,
         customerId: customer.id,
         amount: validatedData.amount,
-        status: 'PENDING'
+        status: validatedData.status || 'PENDING'
       },
       include: {
         customer: {
@@ -44,6 +54,7 @@ export async function createOrder(req: Request, res: Response) {
       }
     });
     
+    // Update customer's total spend
     await prisma.customer.update({
       where: { id: customer.id },
       data: {
@@ -68,6 +79,8 @@ export async function createOrder(req: Request, res: Response) {
       }
     });
   } catch (error: any) {
+    console.error('Error creating order:', error);
+    
     if (error.name === 'ZodError') {
       return res.status(400).json({
         error: 'Validation error',
@@ -82,12 +95,16 @@ export async function createOrder(req: Request, res: Response) {
   }
 }
 
+// Get all orders with pagination and filtering
 export async function getOrders(req: Request, res: Response) {
   try {
+    console.log('Fetching orders with query:', req.query);
+    
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
     
+    // Build where clause for filtering
     const where: any = {};
     
     if (req.query.customerId) {
@@ -104,6 +121,7 @@ export async function getOrders(req: Request, res: Response) {
       }
     }
     
+    // Get orders with pagination
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
         where,
@@ -125,6 +143,7 @@ export async function getOrders(req: Request, res: Response) {
       prisma.order.count({ where })
     ]);
     
+    // Transform orders for frontend
     const transformedOrders = orders.map(order => ({
       id: order.id,
       orderId: order.orderId,
@@ -139,6 +158,8 @@ export async function getOrders(req: Request, res: Response) {
     
     const totalPages = Math.ceil(total / limit);
     
+    console.log(`Found ${total} orders, returning ${transformedOrders.length} orders`);
+    
     return res.json({
       orders: transformedOrders,
       pagination: {
@@ -151,6 +172,7 @@ export async function getOrders(req: Request, res: Response) {
       }
     });
   } catch (error: any) {
+    console.error('Error fetching orders:', error);
     return res.status(500).json({
       error: 'Failed to fetch orders',
       message: error.message
@@ -158,6 +180,7 @@ export async function getOrders(req: Request, res: Response) {
   }
 }
 
+// Get a single order by ID
 export async function getOrderById(req: Request, res: Response) {
   try {
     const { id } = req.params;
@@ -196,6 +219,7 @@ export async function getOrderById(req: Request, res: Response) {
     
     return res.json({ order: transformedOrder });
   } catch (error: any) {
+    console.error('Error fetching order:', error);
     return res.status(500).json({
       error: 'Failed to fetch order',
       message: error.message
@@ -203,11 +227,13 @@ export async function getOrderById(req: Request, res: Response) {
   }
 }
 
+// Update an order
 export async function updateOrder(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const updateData = req.body;
     
+    // Check if order exists
     const existingOrder = await prisma.order.findUnique({
       where: { id },
       include: { customer: true }
@@ -217,6 +243,7 @@ export async function updateOrder(req: Request, res: Response) {
       return res.status(404).json({ error: 'Order not found' });
     }
     
+    // If amount is being updated, adjust customer's total spend
     if (updateData.amount && updateData.amount !== existingOrder.amount) {
       const amountDifference = updateData.amount - existingOrder.amount;
       await prisma.customer.update({
@@ -229,6 +256,7 @@ export async function updateOrder(req: Request, res: Response) {
       });
     }
     
+    // Update the order
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
@@ -263,6 +291,7 @@ export async function updateOrder(req: Request, res: Response) {
       order: transformedOrder
     });
   } catch (error: any) {
+    console.error('Error updating order:', error);
     return res.status(500).json({
       error: 'Failed to update order',
       message: error.message
@@ -270,10 +299,12 @@ export async function updateOrder(req: Request, res: Response) {
   }
 }
 
+// Delete an order
 export async function deleteOrder(req: Request, res: Response) {
   try {
     const { id } = req.params;
     
+    // Check if order exists and get amount for customer spend adjustment
     const existingOrder = await prisma.order.findUnique({
       where: { id },
       include: { customer: true }
@@ -283,10 +314,12 @@ export async function deleteOrder(req: Request, res: Response) {
       return res.status(404).json({ error: 'Order not found' });
     }
     
+    // Delete the order
     await prisma.order.delete({
       where: { id }
     });
     
+    // Adjust customer's total spend
     await prisma.customer.update({
       where: { id: existingOrder.customerId },
       data: {
@@ -296,8 +329,11 @@ export async function deleteOrder(req: Request, res: Response) {
       }
     });
     
+    console.log('Order deleted successfully:', id);
+    
     return res.json({ message: 'Order deleted successfully' });
   } catch (error: any) {
+    console.error('Error deleting order:', error);
     return res.status(500).json({
       error: 'Failed to delete order',
       message: error.message

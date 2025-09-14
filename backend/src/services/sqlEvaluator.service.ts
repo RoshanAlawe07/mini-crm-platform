@@ -66,6 +66,9 @@ export class SqlEvaluator {
    * Converts a rules group to Prisma where clause
    */
   private static rulesGroupToPrisma(rulesGroup: RulesGroup): Prisma.CustomerWhereInput {
+    if (!rulesGroup.rules || !Array.isArray(rulesGroup.rules)) {
+      throw new Error('Invalid rules group: rules must be an array');
+    }
     const conditions = rulesGroup.rules.map(rule => this.rulesToPrismaWhere(rule));
 
     if (rulesGroup.op === 'AND') {
