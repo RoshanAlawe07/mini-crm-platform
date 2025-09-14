@@ -15,7 +15,7 @@ export async function createSegment(req: Request, res: Response) {
         name: parsed.name,
         description: parsed.description,
         rulesJson: parsed.rulesJson,
-        createdBy: parsed.createdBy,
+        userId: parsed.createdBy, // Map createdBy to userId
       },
     });
 
