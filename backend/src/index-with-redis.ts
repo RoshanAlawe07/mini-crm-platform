@@ -27,8 +27,23 @@ const customerQueue = new Queue('ingest-customers', { connection: redisConnectio
 
 // Security middleware
 app.use(helmet());
+
+// CORS configuration with proper origin validation
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://mini-crm-platform-psi.vercel.app'
+];
+
+// Add environment variable origins if they exist and are valid
+if (process.env.FRONTEND_URL && typeof process.env.FRONTEND_URL === 'string') {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+if (process.env.RAILWAY_STATIC_URL && typeof process.env.RAILWAY_STATIC_URL === 'string') {
+  allowedOrigins.push(process.env.RAILWAY_STATIC_URL);
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || process.env.RAILWAY_STATIC_URL || 'http://localhost:3000',
+  origin: allowedOrigins,
   credentials: true
 }));
 
