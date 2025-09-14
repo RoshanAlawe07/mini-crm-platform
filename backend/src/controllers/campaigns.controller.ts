@@ -33,21 +33,17 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
   return communicationLogs;
 }
 
-export async function createCampaign(req: Request, res: Response) {
+export async function createCampaign(req: Request, res: Response): Promise<void> {
   try {
-    // Create or get default user
-    let defaultUser = await prisma.user.findFirst({
-      where: { email: 'admin@xenocrm.com' }
-    });
+    // Get user ID from request (should be set by auth middleware)
+    const userId = (req as any).user?.id || req.body.userId;
     
-    if (!defaultUser) {
-      defaultUser = await prisma.user.create({
-        data: {
-          email: 'admin@xenocrm.com',
-          name: 'Admin User',
-          role: 'ADMIN'
-        }
+    if (!userId) {
+      res.status(400).json({
+        success: false,
+        error: 'User ID is required to create a campaign'
       });
+      return;
     }
     
     // Validate segmentId if provided
@@ -64,7 +60,7 @@ export async function createCampaign(req: Request, res: Response) {
     const campaign = await prisma.campaign.create({
       data: {
         name: req.body.name,
-        userId: defaultUser.id,
+        userId: userId,
         status: req.body.status || "DRAFT",
         rulesJson: req.body.rules_json || '{}',
         segmentId: segmentId,
