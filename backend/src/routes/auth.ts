@@ -48,6 +48,16 @@ router.post("/google", async (req, res) => {
       });
     }
 
+    // Validate JWT_SECRET exists
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET environment variable is not set');
+      return res.status(500).json({
+        success: false,
+        error: 'Server configuration error',
+        details: 'JWT secret not configured'
+      });
+    }
+
     const token = jwt.sign(
       {
         id: user.id,
@@ -55,7 +65,7 @@ router.post("/google", async (req, res) => {
         name: user.name,
         googleId: user.googleId
       },
-      process.env.JWT_SECRET || "fallback-secret",
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 

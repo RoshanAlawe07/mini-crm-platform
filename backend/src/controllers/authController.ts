@@ -47,10 +47,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       }
     });
 
+    // Validate JWT_SECRET exists
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET environment variable is not set');
+      res.status(500).json({ 
+        error: 'Server configuration error',
+        details: 'JWT secret not configured'
+      });
+      return;
+    }
+
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
     );
 
@@ -87,10 +97,20 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Validate JWT_SECRET exists
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET environment variable is not set');
+      res.status(500).json({ 
+        error: 'Server configuration error',
+        details: 'JWT secret not configured'
+      });
+      return;
+    }
+
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
     );
 
