@@ -25,6 +25,7 @@ model User {
 
   // Relations
   campaigns Campaign[]
+  segments  Segment[]
 
   @@map("users")
 }
@@ -66,7 +67,7 @@ model Segment {
   id          String   @id @default(cuid())
   userId      String
   name        String
-  description String?
+  description String?  // Optional description field
   rulesJson   String   // JSON string containing the rules format
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

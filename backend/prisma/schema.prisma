@@ -24,6 +24,7 @@ model User {
 
   // Relations
   campaigns Campaign[]
+  segments  Segment[]
 
   @@map("users")
 }
@@ -62,14 +63,15 @@ model Order {
 
 model Segment {
   id          String   @id @default(cuid())
+  userId      String
   name        String
   description String?  // Optional description field
   rulesJson   String   // JSON string containing the rules format
-  createdBy   String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   campaigns Campaign[]
 
   @@map("segments")
