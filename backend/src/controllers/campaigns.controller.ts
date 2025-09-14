@@ -89,7 +89,7 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
       });
       
       communicationLogs.push(log);
-      console.log(`✅ Successfully processed customer ${customerId}`);
+      console.log(`✅ Successfully processed customer ${customerId} - Log ID: ${log.id}, Status: ${log.status}`);
       
     } catch (error: any) {
       console.error(`❌ Failed to process customer ${customerId}:`, error.message);
@@ -326,12 +326,22 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
         await simulateMessageSending(campaign.id, customerIds, campaign.messageTemplate);
         console.log(`✅ Successfully sent messages to ${customerIds.length} customers`);
         
+        // Verify that communication logs were created
+        console.log(`🔍 Verifying communication logs were created...`);
+        const verificationLogs = await prisma.communicationLog.findMany({
+          where: { campaignId: campaign.id },
+          select: { id: true, status: true, createdAt: true }
+        });
+        console.log(`📊 Verification: Found ${verificationLogs.length} communication logs for campaign ${campaign.id}`);
+        console.log('📊 Verification logs:', verificationLogs);
+        
         res.json({
           success: true,
           message: `Messages sent to ${customerIds.length} customers`,
           data: {
             campaignId: campaign.id,
-            messagesSent: customerIds.length
+            messagesSent: customerIds.length,
+            logsCreated: verificationLogs.length
           }
         });
       } catch (simulateError: any) {
@@ -643,6 +653,7 @@ export async function launchCampaign(req: Request, res: Response): Promise<void>
 export async function getCampaignStats(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
+    console.log(`📊 Getting stats for campaign: ${id}`);
     
     const campaign = await prisma.campaign.findUnique({
       where: { id },
@@ -652,6 +663,7 @@ export async function getCampaignStats(req: Request, res: Response): Promise<voi
     });
 
     if (!campaign) {
+      console.log(`❌ Campaign not found: ${id}`);
       res.status(404).json({
         success: false,
         error: 'Campaign not found',
@@ -659,12 +671,21 @@ export async function getCampaignStats(req: Request, res: Response): Promise<voi
       return;
     }
 
+    console.log(`📊 Found ${campaign.communicationLogs.length} communication logs for campaign ${id}`);
+    console.log('📊 Communication logs:', campaign.communicationLogs.map(log => ({
+      id: log.id,
+      status: log.status,
+      createdAt: log.createdAt
+    })));
+
     const stats = {
       total: campaign.communicationLogs.length,
       pending: campaign.communicationLogs.filter(log => log.status === 'PENDING').length,
       sent: campaign.communicationLogs.filter(log => log.status === 'SENT').length,
       failed: campaign.communicationLogs.filter(log => log.status === 'FAILED').length,
     };
+
+    console.log(`📊 Calculated stats:`, stats);
 
     res.json({
       success: true,
@@ -675,7 +696,13 @@ export async function getCampaignStats(req: Request, res: Response): Promise<voi
       },
     });
   } catch (error: any) {
-    console.error('Error fetching campaign stats:', error);
+    console.error('❌ Error fetching campaign stats:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      meta: error.meta
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to fetch campaign stats',
