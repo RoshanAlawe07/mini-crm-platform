@@ -43,9 +43,6 @@ export default function SignUp() {
         password: formData.password
       };
       
-      console.log('Sending signup request:', requestData);
-      console.log('API URL:', apiUrl);
-      
       const response = await fetch(`${apiUrl}/api/auth/signup`, {
         method: 'POST',
         headers: {
@@ -54,18 +51,17 @@ export default function SignUp() {
         body: JSON.stringify(requestData)
       });
       
-      console.log('Response status:', response.status);
       const result = await response.json();
-      console.log('Response data:', result);
       
-      if (result.success) {
-        localStorage.setItem('token', result.data.token);
-        localStorage.setItem('user', JSON.stringify(result.data.user));
+      if (result.message === 'User created successfully') {
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
         localStorage.setItem('isAuthenticated', 'true');
         
+        // Navigate to home page
         window.location.href = '/';
       } else {
-        alert(`Sign up failed: ${result.error}`);
+        alert(`Sign up failed: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Sign up error:', error);

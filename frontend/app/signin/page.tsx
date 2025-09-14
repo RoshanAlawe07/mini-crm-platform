@@ -36,14 +36,15 @@ export default function SignIn() {
       
       const result = await response.json();
       
-      if (result.success) {
-        localStorage.setItem('token', result.data.token);
-        localStorage.setItem('user', JSON.stringify(result.data.user));
+      if (result.message === 'Login successful') {
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
         localStorage.setItem('isAuthenticated', 'true');
         
+        // Navigate to home page
         window.location.href = '/';
       } else {
-        alert(`Sign in failed: ${result.error}`);
+        alert(`Sign in failed: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Sign in error:', error);
