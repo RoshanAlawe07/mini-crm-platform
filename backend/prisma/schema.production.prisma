@@ -1,0 +1,117 @@
+// Production Prisma schema for Railway PostgreSQL
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  googleId  String?  @unique
+  email     String   @unique
+  name      String?
+  password  String?  // For email/password authentication
+  picture   String?
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  campaigns Campaign[]
+  segments  Segment[]
+
+  @@map("users")
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  totalSpend  Float    @default(0)
+  visitsCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  orders            Order[]
+  communicationLogs CommunicationLog[]
+
+  @@map("customers")
+}
+
+model Order {
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  customerId String
+  amount     Float
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("orders")
+}
+
+model Segment {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  rulesJson   String   // JSON string containing the rules format
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaigns Campaign[]
+
+  @@map("segments")
+}
+
+model Campaign {
+  id              String   @id @default(cuid())
+  userId          String
+  segmentId       String?
+  name            String
+  messageTemplate String?
+  status          String   @default("DRAFT") // DRAFT or SCHEDULED
+  rulesJson       String?  // JSON string containing the rules format
+  scheduledAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segment           Segment?            @relation(fields: [segmentId], references: [id], onDelete: SetNull)
+  communicationLogs CommunicationLog[]
+
+  @@map("campaigns")
+}
+
+model CommunicationLog {
+  id              String   @id @default(cuid())
+  campaignId      String
+  customerId      String
+  messageId       String   @unique @default(cuid()) // UUID for idempotency
+  message         String
+  status          String   @default("PENDING") // PENDING, SENT, FAILED
+  attempts        Int      @default(0)
+  lastAttemptAt   DateTime?
+  deliveryReceipt String?  // JSON string containing delivery information
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("communication_logs")
+}
