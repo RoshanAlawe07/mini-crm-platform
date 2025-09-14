@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["nodejs", "npm"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = [
+  "npx prisma generate --schema=./prisma/schema.prisma",
+  "npx tsc"
+]
+
+[start]
+cmd = "npm start"
