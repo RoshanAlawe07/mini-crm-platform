@@ -8,15 +8,15 @@
     "dev:redis": "nodemon src/index-with-redis.ts",
     "dev:simple": "node simple-test-server.js",
     "build": "tsc",
-    "start": "node start-railway.js",
+    "start": "node railway-start.js",
     "start:dev": "node simple-test-server.js",
     "worker": "ts-node src/workers/customerWorker.ts",
     "worker:dev": "nodemon --exec ts-node src/workers/customerWorker.ts",
-    "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
+    "prisma:push": "prisma db push --schema=./prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
+    "prisma:studio": "prisma studio --schema=./prisma/schema.prisma",
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },
   "keywords": [
     "crm",
@@ -27,6 +27,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "prisma": {
+    "schema": "./prisma/schema.prisma"
+  },
   "dependencies": {
     "@prisma/client": "^5.7.1",
     "axios": "^1.12.0",

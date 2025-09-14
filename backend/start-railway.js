@@ -1,5 +1,6 @@
 const { execSync } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 console.log('🚀 Starting XenoCRM Backend on Railway...');
 
@@ -8,7 +9,6 @@ try {
   console.log('📁 Current working directory:', process.cwd());
   console.log('📁 Checking for prisma schema...');
   
-  const fs = require('fs');
   const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
   
   if (fs.existsSync(schemaPath)) {
@@ -17,15 +17,31 @@ try {
     console.log('❌ prisma/schema.prisma not found');
     console.log('📁 Contents of current directory:');
     console.log(fs.readdirSync(process.cwd()));
+    
+    // Try to find the schema file
+    console.log('🔍 Searching for schema files...');
+    const findSchema = (dir) => {
+      const files = fs.readdirSync(dir);
+      for (const file of files) {
+        const fullPath = path.join(dir, file);
+        const stat = fs.statSync(fullPath);
+        if (stat.isDirectory()) {
+          findSchema(fullPath);
+        } else if (file === 'schema.prisma') {
+          console.log('📄 Found schema at:', fullPath);
+        }
+      }
+    };
+    findSchema(process.cwd());
   }
 
-  // Generate Prisma client
+  // Generate Prisma client with explicit schema path
   console.log('📦 Generating Prisma client...');
-  execSync('npx prisma generate', { stdio: 'inherit' });
+  execSync('npx prisma generate --schema=./prisma/schema.prisma', { stdio: 'inherit' });
 
   // Push database schema (for Railway deployment)
   console.log('🗄️  Pushing database schema...');
-  execSync('npx prisma db push', { stdio: 'inherit' });
+  execSync('npx prisma db push --schema=./prisma/schema.prisma', { stdio: 'inherit' });
 
   // Start the application
   console.log('🎯 Starting application...');

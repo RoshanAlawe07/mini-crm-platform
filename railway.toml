@@ -1,0 +1,19 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "echo 'This is a monorepo. Please deploy individual services.'"
+
+# Backend service
+[[services]]
+name = "backend"
+source = "mini-crm-platform/backend"
+buildCommand = "cd mini-crm-platform/backend && npm ci && npm run build"
+startCommand = "cd mini-crm-platform/backend && npm start"
+
+# Frontend service
+[[services]]
+name = "frontend"
+source = "mini-crm-platform/frontend"
+buildCommand = "cd mini-crm-platform/frontend && npm ci && npm run build"
+startCommand = "cd mini-crm-platform/frontend && npm start"
