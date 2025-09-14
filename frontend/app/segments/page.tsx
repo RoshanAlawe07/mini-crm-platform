@@ -532,11 +532,16 @@ function CreateSegmentPage({
         }))
       };
 
+      // Get user ID from localStorage
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const userId = user?.id || 'unknown-user';
+
       await segmentsApi.create({
         name: segmentName,
         description: description,
         rulesJson: JSON.stringify(rulesToSave),
-        createdBy: 'Current User' // You might want to get this from auth context
+        createdBy: userId
       });
 
       alert('Segment saved successfully!');
