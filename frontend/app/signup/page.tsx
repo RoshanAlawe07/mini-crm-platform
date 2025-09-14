@@ -24,6 +24,11 @@ export default function SignUp() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      alert('Please enter both first and last name');
+      return;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match');
       return;
@@ -37,8 +42,7 @@ export default function SignUp() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
           email: formData.email,
           password: formData.password
         })

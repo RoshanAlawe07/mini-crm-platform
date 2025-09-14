@@ -9,6 +9,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, name } = req.body;
 
+    // Validate required fields
+    if (!email || !password || !name) {
+      res.status(400).json({ 
+        error: 'Missing required fields',
+        details: 'Email, password, and name are required'
+      });
+      return;
+    }
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
