@@ -6,6 +6,33 @@ import { SqlEvaluator } from '../services/sqlEvaluator.service';
 
 const prisma = new PrismaClient();
 
+// Helper function to generate unique messageId
+function generateMessageId(): string {
+  return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Helper function to create communication log safely
+async function createCommunicationLog(data: any) {
+  try {
+    return await prisma.communicationLog.create({
+      data: {
+        ...data,
+        messageId: data.messageId || generateMessageId()
+      }
+    });
+  } catch (error: any) {
+    // If messageId column doesn't exist, try without it
+    if (error.code === 'P2022' && error.meta?.column === 'messageId') {
+      console.log('⚠️  messageId column not found, creating log without it');
+      const { messageId, ...dataWithoutMessageId } = data;
+      return await prisma.communicationLog.create({
+        data: dataWithoutMessageId
+      });
+    }
+    throw error;
+  }
+}
+
 // Simulate message sending with realistic success/failure rates
 async function simulateMessageSending(campaignId: string, customerIds: string[], messageTemplate: string) {
   const communicationLogs = [];
@@ -15,16 +42,14 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
     const isSuccess = Math.random() > 0.12; // 88% success rate
     const status = isSuccess ? 'SENT' : 'FAILED';
     
-    const log = await prisma.communicationLog.create({
-      data: {
-        campaignId,
-        customerId,
-        message: messageTemplate,
-        status,
-        attempts: 1,
-        lastAttemptAt: new Date(),
-        deliveryReceipt: isSuccess ? JSON.stringify({ delivered: true, timestamp: new Date() }) : JSON.stringify({ error: 'Delivery failed' })
-      }
+    const log = await createCommunicationLog({
+      campaignId,
+      customerId,
+      message: messageTemplate,
+      status,
+      attempts: 1,
+      lastAttemptAt: new Date(),
+      deliveryReceipt: isSuccess ? JSON.stringify({ delivered: true, timestamp: new Date() }) : JSON.stringify({ error: 'Delivery failed' })
     });
     
     communicationLogs.push(log);
@@ -496,9 +521,27 @@ export async function launchCampaign(req: Request, res: Response): Promise<void>
       attempts: 0,
     }));
 
-    await prisma.communicationLog.createMany({
-      data: communicationLogs,
-    });
+    // Try createMany first, if it fails due to messageId column, create individually
+    try {
+      await prisma.communicationLog.createMany({
+        data: communicationLogs.map(log => ({
+          ...log,
+          messageId: generateMessageId()
+        })),
+      });
+    } catch (error: any) {
+      if (error.code === 'P2022' && error.meta?.column === 'messageId') {
+        console.log('⚠️  messageId column not found, creating logs individually without it');
+        // Create logs individually without messageId
+        for (const log of communicationLogs) {
+          await prisma.communicationLog.create({
+            data: log
+          });
+        }
+      } else {
+        throw error;
+      }
+    }
 
     // Update campaign status
     await prisma.campaign.update({
