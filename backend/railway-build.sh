@@ -28,6 +28,6 @@ npx prisma generate --schema=./prisma/schema.prisma
 
 # Build TypeScript
 echo "🔨 Building TypeScript..."
-npm run build
+npx tsc
 
 echo "✅ Build completed!"

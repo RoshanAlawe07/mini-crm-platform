@@ -7,7 +7,7 @@
     "dev": "nodemon src/index.ts",
     "dev:redis": "nodemon src/index-with-redis.ts",
     "dev:simple": "node simple-test-server.js",
-    "build": "tsc",
+    "build": "npx tsc",
     "start": "node railway-start.js",
     "start:dev": "node simple-test-server.js",
     "worker": "ts-node src/workers/customerWorker.ts",
@@ -44,6 +44,8 @@
     "ioredis": "^5.7.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2",
     "zod": "^4.1.5"
   },
   "devDependencies": {
@@ -57,8 +59,6 @@
     "@types/node": "^20.10.5",
     "@types/nodemailer": "^6.4.14",
     "nodemon": "^3.0.2",
-    "prisma": "^5.7.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "prisma": "^5.7.1"
   }
 }

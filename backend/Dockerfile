@@ -10,17 +10,20 @@ COPY package*.json ./
 # Copy prisma folder so Prisma can see schema.prisma
 COPY prisma ./prisma
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev dependencies for build)
+RUN npm ci
 
 # Copy source code
 COPY . .
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 # Build TypeScript
-RUN npm run build
+RUN npx tsc
+
+# Remove dev dependencies to reduce image size
+RUN npm prune --production
 
 # Expose port
 EXPOSE 3001
