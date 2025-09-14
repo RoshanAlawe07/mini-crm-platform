@@ -253,9 +253,9 @@ function CampaignCard({ campaign }: { campaign: any }) {
           </p>
           
           {/* Message Statistics */}
-          {campaign.messageStats && (
-            <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Message Statistics</h4>
+          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Message Statistics</h4>
+            {campaign.messageStats && campaign.messageStats.total > 0 ? (
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Messages:</span>
@@ -282,8 +282,13 @@ function CampaignCard({ campaign }: { campaign: any }) {
                   <span className="font-medium text-red-600">{campaign.messageStats.failureRate}</span>
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-2">
+                <p className="text-sm text-gray-500">No messages sent yet</p>
+                <p className="text-xs text-gray-400 mt-1">Click "Send Messages" to start the campaign</p>
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex space-x-2">
           {campaign.status === 'DRAFT' && (
@@ -294,12 +299,12 @@ function CampaignCard({ campaign }: { campaign: any }) {
               Launch
             </button>
           )}
-          {campaign.status !== 'DRAFT' && (!campaign.messageStats || campaign.messageStats.total === 0) && (
+          {campaign.status !== 'DRAFT' && (
             <button 
               onClick={handleSendMessages}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
             >
-              Send Messages
+              {campaign.messageStats && campaign.messageStats.total > 0 ? 'Resend Messages' : 'Send Messages'}
             </button>
           )}
           <button 

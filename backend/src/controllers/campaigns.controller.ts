@@ -67,17 +67,40 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
   
   console.log(`📤 Starting message simulation for ${customerIds.length} customers`);
   
+  // Calculate exact success/failure distribution for 90% success rate
+  const totalCustomers = customerIds.length;
+  const successCount = Math.floor(totalCustomers * 0.9); // 90% success
+  const failureCount = totalCustomers - successCount; // 10% failure
+  
+  console.log(`📊 Target distribution: ${successCount} success, ${failureCount} failure`);
+  
+  // Create arrays to track which customers will succeed/fail
+  const successIndices = new Set();
+  const failureIndices = new Set();
+  
+  // Randomly assign success/failure
+  while (successIndices.size < successCount) {
+    const randomIndex = Math.floor(Math.random() * totalCustomers);
+    if (!successIndices.has(randomIndex) && !failureIndices.has(randomIndex)) {
+      successIndices.add(randomIndex);
+    }
+  }
+  
+  while (failureIndices.size < failureCount) {
+    const randomIndex = Math.floor(Math.random() * totalCustomers);
+    if (!successIndices.has(randomIndex) && !failureIndices.has(randomIndex)) {
+      failureIndices.add(randomIndex);
+    }
+  }
+  
   for (let i = 0; i < customerIds.length; i++) {
     const customerId = customerIds[i];
-    console.log(`📝 Processing customer ${i + 1}/${customerIds.length}: ${customerId}`);
+    const isSuccess = successIndices.has(i);
+    const status = isSuccess ? 'SENT' : 'FAILED';
+    
+    console.log(`📝 Processing customer ${i + 1}/${customerIds.length}: ${customerId} - ${status}`);
     
     try {
-      // Simulate realistic failure rate (around 10-15%)
-      const isSuccess = Math.random() > 0.12; // 88% success rate
-      const status = isSuccess ? 'SENT' : 'FAILED';
-      
-      console.log(`📊 Customer ${customerId} status: ${status}`);
-      
       const log = await createCommunicationLog({
         campaignId,
         customerId,
@@ -104,7 +127,13 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
     }
   }
   
+  const actualSuccess = communicationLogs.filter(log => log.status === 'SENT').length;
+  const actualFailure = communicationLogs.filter(log => log.status === 'FAILED').length;
+  const actualSuccessRate = totalCustomers > 0 ? ((actualSuccess / totalCustomers) * 100).toFixed(1) : '0.0';
+  
   console.log(`📊 Message simulation completed: ${communicationLogs.length}/${customerIds.length} customers processed`);
+  console.log(`📊 Final stats: ${actualSuccess} success (${actualSuccessRate}%), ${actualFailure} failure`);
+  
   return communicationLogs;
 }
 
@@ -169,6 +198,7 @@ export async function createCampaign(req: Request, res: Response): Promise<void>
       
       // Simulate sending messages
       if (customerIds.length > 0) {
+        console.log(`🚀 Auto-sending messages for campaign ${campaign.id} to ${customerIds.length} customers`);
         await simulateMessageSending(campaign.id, customerIds, campaign.messageTemplate);
       }
     }
