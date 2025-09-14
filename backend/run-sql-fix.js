@@ -35,6 +35,22 @@ async function runSqlFix() {
       CREATE UNIQUE INDEX IF NOT EXISTS "orders_orderId_key" ON "orders"("orderId");
     `;
     console.log('✅ Created unique index for orderId');
+  }
+
+  // Add missing messageId column to CommunicationLog table
+  console.log('📊 Adding messageId column to CommunicationLog table...');
+  await prisma.$executeRaw`
+    ALTER TABLE "CommunicationLog"
+    ADD COLUMN IF NOT EXISTS "messageId" TEXT;
+  `;
+  console.log('✅ Added messageId column to CommunicationLog');
+  
+  // Create unique index for messageId
+  console.log('🔑 Creating unique index for messageId...');
+  await prisma.$executeRaw`
+    CREATE UNIQUE INDEX IF NOT EXISTS "CommunicationLog_messageId_key" ON "CommunicationLog"("messageId");
+  `;
+  console.log('✅ Created unique index for messageId');
 
     // Verify the changes
     console.log('🧪 Verifying column additions...');
@@ -52,11 +68,19 @@ async function runSqlFix() {
         AND column_name = 'orderId';
     `;
 
+    const communicationLogColumns = await prisma.$queryRaw`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'CommunicationLog' 
+        AND column_name = 'messageId';
+    `;
+
     console.log('📋 Verification results:');
     console.log('  - campaigns.rulesJson:', campaignsColumns.length > 0 ? '✅ EXISTS' : '❌ MISSING');
     console.log('  - orders.orderId:', ordersColumns.length > 0 ? '✅ EXISTS' : '❌ MISSING');
+    console.log('  - CommunicationLog.messageId:', communicationLogColumns.length > 0 ? '✅ EXISTS' : '❌ MISSING');
 
-    if (campaignsColumns.length > 0 && ordersColumns.length > 0) {
+    if (campaignsColumns.length > 0 && ordersColumns.length > 0 && communicationLogColumns.length > 0) {
       console.log('🎉 All missing columns have been added successfully!');
     } else {
       console.log('⚠️  Some columns may still be missing. Check the verification results above.');

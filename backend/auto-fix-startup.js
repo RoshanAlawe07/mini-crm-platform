@@ -65,6 +65,35 @@ async function autoFixDatabase() {
       `;
       console.log('✅ Created unique index for orderId');
     }
+
+    // Check communicationLogs.messageId
+    let communicationLogsHasMessageId = false;
+    try {
+      await prisma.$queryRaw`
+        SELECT "messageId" FROM "CommunicationLog" LIMIT 1;
+      `;
+      communicationLogsHasMessageId = true;
+      console.log('✅ CommunicationLog.messageId column exists');
+    } catch (error) {
+      console.log('❌ CommunicationLog.messageId column missing - will add it');
+    }
+
+    // Add missing messageId column to CommunicationLog table
+    if (!communicationLogsHasMessageId) {
+      console.log('📊 Adding messageId column to CommunicationLog table...');
+      await prisma.$executeRaw`
+        ALTER TABLE "CommunicationLog"
+        ADD COLUMN IF NOT EXISTS "messageId" TEXT;
+      `;
+      console.log('✅ Added messageId column to CommunicationLog');
+      
+      // Create unique index for messageId
+      console.log('🔑 Creating unique index for messageId...');
+      await prisma.$executeRaw`
+        CREATE UNIQUE INDEX IF NOT EXISTS "CommunicationLog_messageId_key" ON "CommunicationLog"("messageId");
+      `;
+      console.log('✅ Created unique index for messageId');
+    }
     
     // Verify the fix
     console.log('🧪 Verifying column additions...');
@@ -82,11 +111,19 @@ async function autoFixDatabase() {
         AND column_name = 'orderId';
     `;
 
+    const communicationLogColumns = await prisma.$queryRaw`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'CommunicationLog' 
+        AND column_name = 'messageId';
+    `;
+
     console.log('📋 Verification results:');
     console.log('  - campaigns.rulesJson:', campaignsColumns.length > 0 ? '✅ EXISTS' : '❌ MISSING');
     console.log('  - orders.orderId:', ordersColumns.length > 0 ? '✅ EXISTS' : '❌ MISSING');
+    console.log('  - CommunicationLog.messageId:', communicationLogColumns.length > 0 ? '✅ EXISTS' : '❌ MISSING');
 
-    if (campaignsColumns.length > 0 && ordersColumns.length > 0) {
+    if (campaignsColumns.length > 0 && ordersColumns.length > 0 && communicationLogColumns.length > 0) {
       console.log('🎉 Database auto-fix completed successfully!');
       return true;
     } else {
