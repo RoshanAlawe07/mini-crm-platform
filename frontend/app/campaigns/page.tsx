@@ -378,12 +378,18 @@ function CreateCampaignPage({
 
     setLoading(true);
     try {
+      // Get user ID from localStorage
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const userId = user?.id || 'unknown-user';
+
       const campaignData = {
         name: campaignName,
         messageTemplate: campaignMessage,
         segmentId: targetSegment || null,
         status: asDraft ? 'DRAFT' : 'SCHEDULED',
-        rules_json: '{}' // Default empty rules
+        rules_json: '{}', // Default empty rules
+        userId: userId
       };
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
