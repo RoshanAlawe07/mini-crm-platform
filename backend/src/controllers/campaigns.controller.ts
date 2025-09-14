@@ -13,24 +13,12 @@ function generateMessageId(): string {
 
 // Helper function to create communication log safely
 async function createCommunicationLog(data: any) {
-  try {
-    return await prisma.communicationLog.create({
-      data: {
-        ...data,
-        messageId: data.messageId || generateMessageId()
-      }
-    });
-  } catch (error: any) {
-    // If messageId column doesn't exist, try without it
-    if (error.code === 'P2022' && error.meta?.column === 'messageId') {
-      console.log('⚠️  messageId column not found, creating log without it');
-      const { messageId, ...dataWithoutMessageId } = data;
-      return await prisma.communicationLog.create({
-        data: dataWithoutMessageId
-      });
+  return await prisma.communicationLog.create({
+    data: {
+      ...data,
+      messageId: data.messageId || generateMessageId()
     }
-    throw error;
-  }
+  });
 }
 
 // Simulate message sending with realistic success/failure rates
@@ -521,27 +509,12 @@ export async function launchCampaign(req: Request, res: Response): Promise<void>
       attempts: 0,
     }));
 
-    // Try createMany first, if it fails due to messageId column, create individually
-    try {
-      await prisma.communicationLog.createMany({
-        data: communicationLogs.map(log => ({
-          ...log,
-          messageId: generateMessageId()
-        })),
-      });
-    } catch (error: any) {
-      if (error.code === 'P2022' && error.meta?.column === 'messageId') {
-        console.log('⚠️  messageId column not found, creating logs individually without it');
-        // Create logs individually without messageId
-        for (const log of communicationLogs) {
-          await prisma.communicationLog.create({
-            data: log
-          });
-        }
-      } else {
-        throw error;
-      }
-    }
+    await prisma.communicationLog.createMany({
+      data: communicationLogs.map(log => ({
+        ...log,
+        messageId: generateMessageId()
+      })),
+    });
 
     // Update campaign status
     await prisma.campaign.update({
