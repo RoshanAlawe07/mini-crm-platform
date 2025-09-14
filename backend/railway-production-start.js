@@ -34,7 +34,7 @@ async function runMigrations() {
     console.log('🔄 Running Prisma migrations...');
     
     // Use migrate deploy for production (doesn't create new migrations, just applies existing ones)
-    execSync('npx prisma migrate deploy --schema=./prisma/schema.prisma', {
+    execSync('npx prisma migrate deploy --schema=./prisma/schema.railway.prisma', {
       stdio: 'inherit',
       timeout: 30000, // 30 second timeout
       cwd: process.cwd()
@@ -47,7 +47,7 @@ async function runMigrations() {
     // If migrations fail, try db push as fallback
     console.log('🔄 Attempting fallback with db push...');
     try {
-      execSync('npx prisma db push --schema=./prisma/schema.prisma', {
+      execSync('npx prisma db push --schema=./prisma/schema.railway.prisma', {
         stdio: 'inherit',
         timeout: 30000,
         cwd: process.cwd()
