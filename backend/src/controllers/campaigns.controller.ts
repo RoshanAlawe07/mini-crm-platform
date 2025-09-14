@@ -123,6 +123,7 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
     console.log(`📝 Processing customer ${i + 1}/${customerIds.length}: ${customerId} - ${status}`);
     
     try {
+      console.log(`📝 Creating communication log for customer ${customerId} with status ${status}`);
       const log = await createCommunicationLog({
         campaignId,
         customerId,
@@ -141,7 +142,8 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
       console.error('Error details:', {
         name: error.name,
         code: error.code,
-        meta: error.meta
+        meta: error.meta,
+        stack: error.stack
       });
       
       // Continue with other customers even if one fails
@@ -341,6 +343,27 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     console.log(`📤 Starting sendMessages for campaign: ${id}`);
     
+    // Test database connection and table access
+    try {
+      const testLogs = await prisma.communicationLog.findMany({
+        take: 1
+      });
+      console.log(`✅ Database connection test successful - found ${testLogs.length} existing logs`);
+    } catch (dbError: any) {
+      console.error('❌ Database connection test failed:', dbError.message);
+      console.error('Database error details:', {
+        name: dbError.name,
+        code: dbError.code,
+        meta: dbError.meta
+      });
+      res.status(500).json({
+        success: false,
+        error: 'Database connection failed',
+        details: dbError.message
+      });
+      return;
+    }
+    
     const campaign = await prisma.campaign.findUnique({
       where: { id },
       include: {
@@ -421,12 +444,23 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
         
         // Verify that communication logs were created
         console.log(`🔍 Verifying communication logs were created...`);
-        const verificationLogs = await prisma.communicationLog.findMany({
-          where: { campaignId: campaign.id },
-          select: { id: true, status: true, createdAt: true }
-        });
-        console.log(`📊 Verification: Found ${verificationLogs.length} communication logs for campaign ${campaign.id}`);
-        console.log('📊 Verification logs:', verificationLogs);
+        let verificationLogs = [];
+        try {
+          verificationLogs = await prisma.communicationLog.findMany({
+            where: { campaignId: campaign.id },
+            select: { id: true, status: true, createdAt: true }
+          });
+          console.log(`📊 Verification: Found ${verificationLogs.length} communication logs for campaign ${campaign.id}`);
+          console.log('📊 Verification logs:', verificationLogs);
+        } catch (verifyError: any) {
+          console.error('❌ Error verifying communication logs:', verifyError);
+          console.error('Verify error details:', {
+            name: verifyError.name,
+            message: verifyError.message,
+            code: verifyError.code,
+            meta: verifyError.meta
+          });
+        }
         
         res.json({
           success: true,
