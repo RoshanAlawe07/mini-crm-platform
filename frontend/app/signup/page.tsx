@@ -36,19 +36,27 @@ export default function SignUp() {
     
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
+      
+      const requestData = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        password: formData.password
+      };
+      
+      console.log('Sending signup request:', requestData);
+      console.log('API URL:', apiUrl);
+      
       const response = await fetch(`${apiUrl}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
-          email: formData.email,
-          password: formData.password
-        })
+        body: JSON.stringify(requestData)
       });
       
+      console.log('Response status:', response.status);
       const result = await response.json();
+      console.log('Response data:', result);
       
       if (result.success) {
         localStorage.setItem('token', result.data.token);

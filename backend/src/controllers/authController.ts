@@ -7,10 +7,12 @@ const prisma = new PrismaClient();
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('Register request body:', req.body);
     const { email, password, name } = req.body;
 
     // Validate required fields
     if (!email || !password || !name) {
+      console.log('Missing fields - email:', !!email, 'password:', !!password, 'name:', !!name);
       res.status(400).json({ 
         error: 'Missing required fields',
         details: 'Email, password, and name are required'
