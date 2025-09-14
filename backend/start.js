@@ -6,11 +6,11 @@ console.log('🚀 Starting XenoCRM Backend...');
 try {
   // Generate Prisma client
   console.log('📦 Generating Prisma client...');
-  execSync('npx prisma generate --schema=./prisma/schema.prisma', { stdio: 'inherit' });
+  execSync('npx prisma generate', { stdio: 'inherit' });
 
   // Push database schema (for Railway deployment)
   console.log('🗄️  Pushing database schema...');
-  execSync('npx prisma db push --schema=./prisma/schema.prisma', { stdio: 'inherit' });
+  execSync('npx prisma db push', { stdio: 'inherit' });
 
   // Start the application
   console.log('🎯 Starting application...');
