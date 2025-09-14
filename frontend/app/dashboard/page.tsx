@@ -26,13 +26,13 @@ export default function Dashboard() {
       const campaignsResponse = await fetch('http://localhost:3001/api/campaigns');
       const campaignsData = await campaignsResponse.json();
       const activeCampaigns = campaignsData.success 
-        ? campaignsData.data.filter(campaign => campaign.status === 'ACTIVE' || campaign.status === 'SCHEDULED').length 
+        ? campaignsData.data.filter((campaign: any) => campaign.status === 'ACTIVE' || campaign.status === 'SCHEDULED').length 
         : 0;
 
       const ordersResponse = await fetch('http://localhost:3001/api/orders');
       const ordersData = await ordersResponse.json();
       const totalIncome = ordersData.orders 
-        ? ordersData.orders.reduce((sum, order) => sum + (order.amount || 0), 0)
+        ? ordersData.orders.reduce((sum: number, order: any) => sum + (order.amount || 0), 0)
         : 0;
 
       setDashboardData({

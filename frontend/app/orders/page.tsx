@@ -319,7 +319,6 @@ export default function Orders() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {console.log('Rendering orders:', orders, 'Length:', orders?.length)}
                       {!orders || orders.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
