@@ -20,6 +20,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy --schema=./prisma/schema.prisma",
     "db:init": "node init-database.js",
     "db:test": "node test-db-connection.js",
+    "redis:test": "node test-redis-connection.js",
     "prisma:studio": "prisma studio --schema=./prisma/schema.prisma",
     "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },

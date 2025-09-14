@@ -16,11 +16,25 @@ const PORT = process.env.PORT || 3001;
 const prisma = new PrismaClient();
 
 // Redis connection
-const redisConnection = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-};
+let redisConnection;
+
+if (process.env.REDIS_URL) {
+  // Parse REDIS_URL (format: redis://username:password@hostname:port)
+  const redisUrl = new URL(process.env.REDIS_URL);
+  redisConnection = {
+    host: redisUrl.hostname,
+    port: parseInt(redisUrl.port) || 6379,
+    password: redisUrl.password || undefined,
+    username: redisUrl.username || undefined,
+  };
+} else {
+  // Fallback to individual environment variables
+  redisConnection = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379'),
+    password: process.env.REDIS_PASSWORD,
+  };
+}
 
 // Create queues
 const customerQueue = new Queue('ingest-customers', { connection: redisConnection });
