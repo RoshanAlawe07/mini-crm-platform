@@ -115,7 +115,7 @@ export async function createCampaign(req: Request, res: Response) {
   }
 }
 
-export async function getAllCampaigns(req: Request, res: Response) {
+export async function getAllCampaigns(req: Request, res: Response): Promise<void> {
   try {
     const campaigns = await prisma.campaign.findMany({
       orderBy: { createdAt: 'desc' },
@@ -175,12 +175,13 @@ export async function getAllCampaigns(req: Request, res: Response) {
     
     // Handle specific Prisma errors
     if (error.code === 'P2021') {
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         error: 'Database table not found',
         message: 'The campaigns table does not exist. Please run database migrations.',
         details: error.message
       });
+      return;
     }
     
     res.status(500).json({
