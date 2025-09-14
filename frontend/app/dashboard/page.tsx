@@ -19,7 +19,7 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
       
       const customersResponse = await fetch(`${apiUrl}/api/customers`);
       const customersData = await customersResponse.json();

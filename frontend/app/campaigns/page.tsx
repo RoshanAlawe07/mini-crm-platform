@@ -18,7 +18,7 @@ export default function CampaignsPage() {
 
   const fetchSegments = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/segments`);
       const data = await response.json();
       setSegments(data.data || []);
@@ -29,7 +29,7 @@ export default function CampaignsPage() {
 
   const fetchCampaigns = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/campaigns`);
       const data = await response.json();
       
@@ -164,7 +164,7 @@ function CampaignCard({ campaign }: { campaign: any }) {
   const handleDelete = async () => {
     if (confirm(`Are you sure you want to delete "${campaign.name}"?`)) {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
         const response = await fetch(`${apiUrl}/api/campaigns/${campaign.id}`, {
           method: 'DELETE'
         });
@@ -187,7 +187,7 @@ function CampaignCard({ campaign }: { campaign: any }) {
   const handleLaunch = async () => {
     if (confirm(`Are you sure you want to launch "${campaign.name}"?`)) {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
         const response = await fetch(`${apiUrl}/api/campaigns/${campaign.id}/launch`, {
           method: 'POST'
         });
@@ -210,7 +210,7 @@ function CampaignCard({ campaign }: { campaign: any }) {
   const handleSendMessages = async () => {
     if (confirm(`Are you sure you want to send messages for "${campaign.name}"?`)) {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
         const response = await fetch(`${apiUrl}/api/campaigns/${campaign.id}/send-messages`, {
           method: 'POST'
         });
@@ -386,7 +386,7 @@ function CreateCampaignPage({
         rules_json: '{}' // Default empty rules
       };
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/campaigns`, {
         method: 'POST',
         headers: {

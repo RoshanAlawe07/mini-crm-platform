@@ -22,7 +22,7 @@ export default function SignIn() {
     e.preventDefault();
     
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
       const response = await fetch(`${apiUrl}/api/auth/signin`, {
         method: 'POST',
         headers: {
