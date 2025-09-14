@@ -216,22 +216,31 @@ function CampaignCard({ campaign }: { campaign: any }) {
   const handleSendMessages = async () => {
     if (confirm(`Are you sure you want to send messages for "${campaign.name}"?`)) {
       try {
+        console.log(`📤 Sending messages for campaign: ${campaign.id}`);
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
         const response = await fetch(`${apiUrl}/api/campaigns/${campaign.id}/send-messages`, {
-          method: 'POST'
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
         
+        console.log(`📤 Response status: ${response.status}`);
+        const result = await response.json();
+        console.log(`📤 Response data:`, result);
+        
         if (response.ok) {
-          alert(`Messages sent successfully for "${campaign.name}"!`);
+          alert(`Messages sent successfully for "${campaign.name}"!\n\nSent to: ${result.data?.messagesSent || 0} customers\nLogs created: ${result.data?.logsCreated || 0}`);
           // Refresh the campaigns list
           window.location.reload();
         } else {
-          const result = await response.json();
-          alert(`Error sending messages: ${result.error || 'Unknown error'}`);
+          console.error('❌ Error response:', result);
+          alert(`Error sending messages: ${result.error || 'Unknown error'}\n\nDetails: ${result.details || 'No details available'}`);
         }
       } catch (error) {
-        console.error('Error sending messages:', error);
-        alert('Error sending messages. Please try again.');
+        console.error('❌ Error sending messages:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Network error';
+        alert(`Error sending messages: ${errorMessage}`);
       }
     }
   };

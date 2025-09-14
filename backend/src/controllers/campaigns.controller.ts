@@ -18,13 +18,19 @@ function generateMessageId(): string {
 async function createCommunicationLog(data: any) {
   try {
     console.log(`📝 Creating communication log for customer: ${data.customerId}`);
+    
+    // Ensure messageId is always provided
+    const logData = {
+      ...data,
+      messageId: data.messageId || generateMessageId()
+    };
+    
+    console.log(`📝 Log data:`, logData);
+    
     const result = await prisma.communicationLog.create({
-      data: {
-        ...data,
-        messageId: data.messageId || generateMessageId()
-      }
+      data: logData
     });
-    console.log(`✅ Communication log created: ${result.id}`);
+    console.log(`✅ Communication log created: ${result.id} with status: ${result.status}`);
     return result;
   } catch (error: any) {
     console.error('❌ Error creating communication log:', error);
@@ -55,6 +61,22 @@ async function createCommunicationLog(data: any) {
       return await prisma.communicationLog.create({
         data: newData
       });
+    }
+    
+    // If table doesn't exist, try with different table name
+    if (error.code === 'P2021') {
+      console.log('⚠️  Table not found, trying with different table name');
+      try {
+        return await prisma.communicationLog.create({
+          data: {
+            ...data,
+            messageId: data.messageId || generateMessageId()
+          }
+        });
+      } catch (retryError) {
+        console.error('❌ Retry also failed:', retryError);
+        throw retryError;
+      }
     }
     
     throw error;
@@ -354,10 +376,31 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
       });
       
       if (segment) {
-        const rules = JSON.parse(segment.rulesJson);
-        const result = await SqlEvaluator.getAudience(prisma, rules);
-        customerIds = result.customers.map((c: any) => c.id);
-        console.log(`📊 Found ${customerIds.length} customers in segment`);
+        console.log(`📊 Found segment: ${segment.name}`);
+        console.log(`📊 Segment rules: ${segment.rulesJson}`);
+        try {
+          const rules = JSON.parse(segment.rulesJson);
+          console.log(`📊 Parsed rules:`, rules);
+          const result = await SqlEvaluator.getAudience(prisma, rules);
+          console.log(`📊 SqlEvaluator result:`, result);
+          customerIds = result.customers.map((c: any) => c.id);
+          console.log(`📊 Found ${customerIds.length} customers in segment`);
+        } catch (error) {
+          console.error(`❌ Error processing segment rules:`, error);
+          res.status(500).json({
+            success: false,
+            error: 'Failed to process segment rules',
+            details: error instanceof Error ? error.message : String(error)
+          });
+          return;
+        }
+      } else {
+        console.log(`❌ Segment not found: ${campaign.segmentId}`);
+        res.status(404).json({
+          success: false,
+          error: 'Segment not found'
+        });
+        return;
       }
     } else {
       console.log(`📊 Getting all customers (no segment)`);

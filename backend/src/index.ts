@@ -12,13 +12,17 @@ dotenv.config();
 // Auto-fix database on startup (for free tier without shell access)
 async function runAutoFix() {
   try {
-    console.log('🔧 Running automatic database fix...');
-    const { autoFixDatabase } = require('../auto-fix-startup.js');
-    const success = await autoFixDatabase();
-    if (success) {
-      console.log('✅ Database auto-fix completed successfully');
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🔧 Running automatic database fix...');
+      const { autoFixDatabase } = require('../auto-fix-startup.js');
+      const success = await autoFixDatabase();
+      if (success) {
+        console.log('✅ Database auto-fix completed successfully');
+      } else {
+        console.log('⚠️  Database auto-fix had issues, but continuing...');
+      }
     } else {
-      console.log('⚠️  Database auto-fix had issues, but continuing...');
+      console.log('🔧 Development mode: Skipping auto-fix');
     }
   } catch (error: any) {
     console.log('⚠️  Database auto-fix failed, but continuing:', error.message);
@@ -33,12 +37,17 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-// Validate DATABASE_URL format
-if (!process.env.DATABASE_URL.startsWith('postgresql://') && !process.env.DATABASE_URL.startsWith('postgres://')) {
-  console.error('❌ DATABASE_URL must be a PostgreSQL connection string!');
+// Validate DATABASE_URL format (allow SQLite for local development)
+if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL.startsWith('postgresql://') && !process.env.DATABASE_URL.startsWith('postgres://')) {
+  console.error('❌ DATABASE_URL must be a PostgreSQL connection string in production!');
   console.error('   Current value:', process.env.DATABASE_URL);
   console.error('   Expected format: postgresql://username:password@host:port/database_name');
   process.exit(1);
+}
+
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 Development mode: Using local database');
+  console.log('   Database URL:', process.env.DATABASE_URL);
 }
 
 const app = express();
