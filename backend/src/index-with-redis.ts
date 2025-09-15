@@ -164,6 +164,14 @@ app.post('/api/auth/signin', async (req, res) => {
       });
     }
     
+    // Check if user has a password (credentials provider)
+    if (!user.password) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'Invalid credentials' 
+      });
+    }
+    
     // Check password
     const bcrypt = require('bcryptjs');
     const isValidPassword = await bcrypt.compare(password, user.password);
