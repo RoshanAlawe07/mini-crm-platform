@@ -1,51 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export default function SignIn() {
-  const { signIn, isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, router]);
+  // No authentication check needed - redirect directly to dashboard
 
   const handleGoogleSignIn = async () => {
-    try {
-      await signIn();
-    } catch (error) {
-      console.error('Google sign in error:', error);
-    }
+    // Redirect directly to dashboard
+    router.push('/dashboard');
   };
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // For now, just show an alert since we don't have email/password auth set up
-    alert('Email/password authentication not implemented yet. Please use Google OAuth.');
+    // Redirect directly to dashboard
+    router.push('/dashboard');
     setIsSubmitting(false);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <h2 className="text-xl font-bold text-gray-900">Loading...</h2>
-        </div>
-      </div>
-    );
-  }
+  // No loading state needed - no authentication
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

@@ -1,35 +1,17 @@
 'use client';
 
-import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function Home() {
-  const { isAuthenticated, loading, signOut } = useAuth();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push('/signin');
-    }
-  }, [isAuthenticated, loading, router]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h2>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
+    // Redirect directly to dashboard
+    router.push('/dashboard');
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -67,12 +49,12 @@ export default function Home() {
               </svg>
             </button>
             
-            <button 
-              onClick={signOut}
+            <Link 
+              href="/dashboard"
               className="bg-black text-white px-2 sm:px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-xs sm:text-sm" 
             >
-              Sign Out
-            </button>
+              Dashboard
+            </Link>
           </div>
         </div>
 
