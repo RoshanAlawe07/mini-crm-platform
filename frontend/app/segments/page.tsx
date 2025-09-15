@@ -390,7 +390,6 @@ function CreateSegmentPage({
 }) {
   const [segmentName, setSegmentName] = useState('');
   const [description, setDescription] = useState('');
-  const [aiHelperText, setAiHelperText] = useState('');
   const [ruleGroups, setRuleGroups] = useState<LocalRuleGroup[]>([
     {
       id: '1',
@@ -459,56 +458,6 @@ function CreateSegmentPage({
     ));
   };
 
-  const convertAiToRules = async () => {
-    if (!aiHelperText.trim()) {
-      alert('Please enter a prompt for AI Helper');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await segmentsApi.aiHelperConvert(aiHelperText);
-      const { rules } = response.data;
-      
-      // Convert the backend rules format to local format
-      if ('field' in rules) {
-        // Single rule
-        const newRule: LocalRule = {
-          id: Date.now().toString(),
-          field: rules.field,
-          operator: rules.operator,
-          value: rules.value
-        };
-        
-        setRuleGroups([{
-          id: '1',
-          operator: 'AND',
-          rules: [newRule]
-        }]);
-      } else {
-        // Rules group - convert to local format
-        const convertedGroups: LocalRuleGroup[] = rules.rules.map((group: any, index: number) => ({
-          id: (index + 1).toString(),
-          operator: group.op,
-          rules: group.rules.map((rule: any) => ({
-            id: Date.now().toString() + Math.random(),
-            field: rule.field,
-            operator: rule.operator,
-            value: rule.value
-          }))
-        }));
-        
-        setRuleGroups(convertedGroups);
-      }
-      
-      alert('AI Helper converted your prompt to rules!');
-    } catch (error) {
-      console.error('Error converting AI prompt:', error);
-      alert('Error converting AI prompt. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const viewMatchingCustomers = async () => {
     setLoadingCustomers(true);
@@ -674,30 +623,6 @@ function CreateSegmentPage({
             </div>
           </div>
 
-          {/* AI Helper */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                <span className="text-white text-xs font-bold">AI</span>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">AI Helper</h2>
-            </div>
-            <div className="flex space-x-3">
-              <input
-                type="text"
-                value={aiHelperText}
-                onChange={(e) => setAiHelperText(e.target.value)}
-                placeholder="Example: Customers inactive for 6 months & spent > 5000"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={convertAiToRules}
-                className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors"
-              >
-                Convert to Rules
-              </button>
-            </div>
-          </div>
 
           {/* Rule Builder */}
           <div className="bg-white border border-gray-200 rounded-lg p-6">
