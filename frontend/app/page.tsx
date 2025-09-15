@@ -1,26 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
+  const { isAuthenticated, loading, signOut } = useAuth();
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated');
-    setIsAuthenticated(authStatus === 'true');
-    setIsLoading(false);
-    
-    if (authStatus !== 'true') {
-      router.push('/signup');
+    if (!loading && !isAuthenticated) {
+      router.push('/signin');
     }
-  }, [router]);
+  }, [isAuthenticated, loading, router]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -32,14 +28,7 @@ export default function Home() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Redirecting to Sign Up...</h2>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -79,12 +68,7 @@ export default function Home() {
             </button>
             
             <button 
-              onClick={() => {
-                localStorage.removeItem('isAuthenticated');
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                router.push('/signin');
-              }}
+              onClick={signOut}
               className="bg-black text-white px-2 sm:px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-xs sm:text-sm" 
             >
               Sign Out
