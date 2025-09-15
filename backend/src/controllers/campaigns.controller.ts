@@ -179,6 +179,13 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
     customerId: log.customerId
   })));
   
+  // Verify the exact success/failure ratio
+  const expectedSuccess = Math.floor(totalCustomers * 0.9);
+  const expectedFailure = totalCustomers - expectedSuccess;
+  console.log(`📊 Expected: ${expectedSuccess} success, ${expectedFailure} failure`);
+  console.log(`📊 Actual: ${actualSuccess} success, ${actualFailure} failure`);
+  console.log(`📊 Success rate: ${actualSuccessRate}% (should be ~90%)`);
+  
   return communicationLogs;
 }
 
@@ -367,6 +374,52 @@ export async function getAllCampaigns(req: Request, res: Response): Promise<void
       error: 'Failed to fetch campaigns',
       message: error.message,
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+}
+
+// Test endpoint to verify message sending logic
+export async function testMessageSending(req: Request, res: Response): Promise<void> {
+  try {
+    console.log('🧪 Testing message sending logic...');
+    
+    // Create test data
+    const testCampaignId = 'test-campaign-' + Date.now();
+    const testCustomerIds = ['customer1', 'customer2', 'customer3', 'customer4', 'customer5'];
+    const testMessage = 'Test message for verification';
+    
+    console.log(`🧪 Testing with ${testCustomerIds.length} customers`);
+    
+    // Test the simulation
+    const logs = await simulateMessageSending(testCampaignId, testCustomerIds, testMessage);
+    
+    const successCount = logs.filter(log => log.status === 'SENT').length;
+    const failureCount = logs.filter(log => log.status === 'FAILED').length;
+    const successRate = ((successCount / testCustomerIds.length) * 100).toFixed(1);
+    
+    res.json({
+      success: true,
+      message: 'Message sending test completed',
+      data: {
+        totalCustomers: testCustomerIds.length,
+        successCount,
+        failureCount,
+        successRate: `${successRate}%`,
+        expectedSuccessRate: '90.0%',
+        logs: logs.map(log => ({
+          id: log.id,
+          status: log.status,
+          customerId: log.customerId
+        }))
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Test failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Test failed',
+      details: error.message
     });
   }
 }

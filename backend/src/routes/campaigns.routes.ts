@@ -9,7 +9,8 @@ import {
   launchCampaign,
   getCampaignStats,
   sendCampaign,
-  sendMessages
+  sendMessages,
+  testMessageSending
 } from '../controllers/campaigns.controller';
 
 const router = Router();
@@ -27,6 +28,9 @@ router.post('/:id/launch', launchCampaign);
 router.post('/:id/send', sendCampaign);
 router.post('/:id/send-messages', sendMessages);
 router.get('/:id/stats', getCampaignStats);
+
+// Test endpoint
+router.get('/test/message-sending', testMessageSending);
 
 export default router;
 
