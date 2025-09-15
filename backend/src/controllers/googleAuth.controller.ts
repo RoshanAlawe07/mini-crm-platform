@@ -7,7 +7,7 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || process.env.CLI
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mini-crm-platform-psi.vercel.app';
 
 // Generate Google OAuth URL
-export const getGoogleAuthUrl = (req: Request, res: Response) => {
+export const getGoogleAuthUrl = (req: Request, res: Response): void => {
   try {
     const redirectUri = `${FRONTEND_URL}/auth/google/callback`;
     const scope = 'openid email profile';
@@ -35,15 +35,16 @@ export const getGoogleAuthUrl = (req: Request, res: Response) => {
 };
 
 // Handle Google OAuth callback
-export const handleGoogleCallback = async (req: Request, res: Response) => {
+export const handleGoogleCallback = async (req: Request, res: Response): Promise<void> => {
   try {
     const { code } = req.query;
 
     if (!code) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Authorization code not provided'
       });
+      return;
     }
 
     // Exchange code for access token
@@ -87,15 +88,16 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
 };
 
 // Verify JWT token
-export const verifyToken = (req: Request, res: Response) => {
+export const verifyToken = (req: Request, res: Response): void => {
   try {
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'No authorization header'
       });
+      return;
     }
 
     const token = authHeader.split(' ')[1];
