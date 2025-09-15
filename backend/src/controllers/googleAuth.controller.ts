@@ -74,8 +74,8 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
       googleId: userInfo.id
     }, jwtSecret, { expiresIn: '7d' });
 
-    // Redirect to frontend with token
-    const redirectUrl = `${FRONTEND_URL}/dashboard?token=${token}`;
+    // Redirect to frontend callback with token
+    const redirectUrl = `${FRONTEND_URL}/auth/google/callback?token=${token}`;
     res.redirect(redirectUrl);
 
   } catch (error) {

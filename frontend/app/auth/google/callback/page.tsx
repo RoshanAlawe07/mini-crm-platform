@@ -37,6 +37,8 @@ function CallbackInner() {
           return;
         }
 
+        // Note: State parameter is optional for this flow
+
         // Verify the token
         const result = await verifyToken(token);
         
