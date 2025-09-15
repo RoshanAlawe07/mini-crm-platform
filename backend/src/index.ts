@@ -178,6 +178,16 @@ app.get('/cors-test', (req, res) => {
   });
 });
 
+// Test OAuth endpoint
+app.get('/api/oauth/test', (req, res) => {
+  res.json({
+    message: 'OAuth routes are working!',
+    timestamp: new Date().toISOString(),
+    googleClientId: !!process.env.GOOGLE_CLIENT_ID,
+    googleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET
+  });
+});
+
 // Import routes
 import authRoutes from './routes/auth';
 import googleAuthRoutes from './routes/googleAuth.routes';
