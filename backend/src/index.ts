@@ -114,6 +114,46 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Health check with authorization status
+app.get('/health/auth', (req, res) => {
+  const authHeader = req.headers["authorization"];
+  let authorized = false;
+  let user = null;
+  let authError = null;
+
+  if (authHeader) {
+    const token = authHeader.split(" ")[1];
+    if (token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback-secret");
+        authorized = true;
+        user = {
+          id: decoded.id,
+          email: decoded.email,
+          name: decoded.name,
+          googleId: decoded.googleId
+        };
+      } catch (err) {
+        authError = "Invalid or expired token";
+      }
+    } else {
+      authError = "Missing token";
+    }
+  } else {
+    authError = "Missing authorization header";
+  }
+
+  res.status(200).json({ 
+    status: 'OK',
+    authorized: authorized,
+    user: user,
+    authError: authError,
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // CORS test endpoint
 app.get('/cors-test', (req, res) => {
   res.json({
