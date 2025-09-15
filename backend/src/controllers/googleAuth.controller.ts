@@ -9,7 +9,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mini-crm-platform-psi.
 // Generate Google OAuth URL
 export const getGoogleAuthUrl = (req: Request, res: Response): void => {
   try {
-    const redirectUri = `${FRONTEND_URL}/auth/google/callback`;
+    const redirectUri = `${process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com'}/api/oauth/google/callback`;
     const scope = 'openid email profile';
     
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -53,7 +53,7 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
       client_secret: GOOGLE_CLIENT_SECRET,
       code: code,
       grant_type: 'authorization_code',
-      redirect_uri: `${FRONTEND_URL}/auth/google/callback`
+      redirect_uri: `${process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com'}/api/oauth/google/callback`
     });
 
     const { access_token, id_token } = tokenResponse.data;
