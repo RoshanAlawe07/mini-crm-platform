@@ -37,6 +37,7 @@ export default function CampaignsPage() {
       
       if (data.success) {
         console.log('📊 Campaigns data:', data.data);
+        console.log('📊 First campaign messageStats:', data.data?.[0]?.messageStats);
         setCampaigns(data.data || []);
       } else {
         console.error('Error fetching campaigns:', data.error);
@@ -100,7 +101,7 @@ export default function CampaignsPage() {
                 </div>
               ) : (
                 campaigns.map((campaign) => (
-                  <CampaignCard key={campaign.id} campaign={campaign} />
+                  <CampaignCard key={campaign.id} campaign={campaign} onRefresh={fetchCampaigns} />
                 ))
               )}
             </div>
@@ -153,7 +154,7 @@ function Header() {
   );
 }
 
-function CampaignCard({ campaign }: { campaign: any }) {
+function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () => void }) {
   console.log('📊 CampaignCard received campaign:', campaign);
   console.log('📊 Campaign messageStats:', campaign.messageStats);
   
@@ -231,8 +232,10 @@ function CampaignCard({ campaign }: { campaign: any }) {
         
         if (response.ok) {
           alert(`Messages sent successfully for "${campaign.name}"!\n\nSent to: ${result.data?.messagesSent || 0} customers\nLogs created: ${result.data?.logsCreated || 0}`);
-          // Refresh the campaigns list
-          window.location.reload();
+          // Wait a moment for backend to process, then refresh the campaigns list
+          setTimeout(() => {
+            onRefresh();
+          }, 1000);
         } else {
           console.error('❌ Error response:', result);
           alert(`Error sending messages: ${result.error || 'Unknown error'}\n\nDetails: ${result.details || 'No details available'}`);
