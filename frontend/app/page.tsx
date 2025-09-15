@@ -45,7 +45,7 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200">
         <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
-          <h1 className="text-base font-bold text-black">XenoCRM</h1>
+        <Link href="/" className="text-2xl font-bold text-black">XenoCRM</Link>
        <nav className="flex space-x-6">
          <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-gray-100">
            Dashboard
