@@ -60,7 +60,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-white">
       <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200">
         <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
-          <Link href="/" className="font-bold text-black text-base">XenoCRM</Link>
+        <Link href="/" className="text-2xl font-bold text-black">XenoCRM</Link>
            <nav className="flex space-x-6">
              <Link href="/dashboard" className="text-black font-medium">
                Dashboard
