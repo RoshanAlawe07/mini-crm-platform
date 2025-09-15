@@ -194,20 +194,25 @@ app.get('/api/oauth/google/url', (req, res) => {
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;
     const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mini-crm-platform-psi.vercel.app';
     const redirectUri = `${FRONTEND_URL}/auth/google/callback`;
-    const scope = 'openid email profile';
+    
+    // Use more specific scopes and remove problematic parameters
+    const scope = 'email profile';
+    const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=${GOOGLE_CLIENT_ID}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `response_type=code&` +
       `scope=${encodeURIComponent(scope)}&` +
-      `access_type=offline&` +
-      `prompt=consent`;
+      `state=${state}&` +
+      `access_type=online&` +
+      `include_granted_scopes=true`;
 
     res.json({
       success: true,
       authUrl: authUrl,
-      redirectUri: redirectUri
+      redirectUri: redirectUri,
+      state: state
     });
   } catch (error) {
     console.error('Error generating Google auth URL:', error);

@@ -22,6 +22,14 @@ function CallbackInner() {
         }
 
         const token = searchParams.get('token');
+        const state = searchParams.get('state');
+        const error = searchParams.get('error');
+        
+        if (error) {
+          setStatus('error');
+          setMessage(`OAuth error: ${error}`);
+          return;
+        }
         
         if (!token) {
           setStatus('error');
