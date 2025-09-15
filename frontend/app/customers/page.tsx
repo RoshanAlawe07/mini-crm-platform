@@ -48,6 +48,7 @@ export default function Customers() {
     email: '',
     phone: ''
   });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Fetch customers from API
   const fetchCustomers = async () => {
@@ -188,33 +189,90 @@ export default function Customers() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200 bg-white">
-        {/* Left side - Brand and Navigation */}
-        <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
-          <Link href="/" className="text-2xl font-bold text-black">XenoCRM</Link>
-          <nav className="flex space-x-6">
-            <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/customers" className="text-black font-medium">
-              Customers
-            </Link>
-            <Link href="/orders" className="text-gray-500 hover:text-gray-700 transition-colors">
-              Orders
-            </Link>
-            <Link href="/campaigns" className="text-gray-500 hover:text-gray-700 transition-colors">
-              Campaigns
-            </Link>
-            <Link href="/segments" className="text-gray-500 hover:text-gray-700 transition-colors">
-              Segments
-            </Link>
-          </nav>
+      <header className="relative">
+        <div className="flex items-center justify-between px-4 sm:px-6 lg:px-12 py-4 border-b border-gray-200 bg-white">
+          {/* Left side - Brand and Navigation */}
+          <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-8">
+            <Link href="/" className="text-xl sm:text-2xl font-bold text-black">XenoCRM</Link>
+            <nav className="hidden md:flex space-x-2 lg:space-x-6">
+              <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors text-sm lg:text-base">
+                Dashboard
+              </Link>
+              <Link href="/customers" className="text-black font-medium text-sm lg:text-base">
+                Customers
+              </Link>
+              <Link href="/orders" className="text-gray-500 hover:text-gray-700 transition-colors text-sm lg:text-base">
+                Orders
+              </Link>
+              <Link href="/campaigns" className="text-gray-500 hover:text-gray-700 transition-colors text-sm lg:text-base">
+                Campaigns
+              </Link>
+              <Link href="/segments" className="text-gray-500 hover:text-gray-700 transition-colors text-sm lg:text-base">
+                Segments
+              </Link>
+            </nav>
+          </div>
+          
+          {/* Right side - Mobile Menu and Logout Button */}
+          <div className="flex items-center space-x-2">
+            {/* Mobile menu button */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            
+            <button className="bg-black text-white px-2 sm:px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-xs sm:text-sm">
+              Logout
+            </button>
+          </div>
         </div>
-        
-        {/* Right side - Logout Button */}
-        <button className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" style={{marginRight: '70px'}}>
-          Logout
-        </button>
+
+        {/* Mobile menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50">
+            <nav className="flex flex-col space-y-1 px-4 py-2">
+              <Link 
+                href="/dashboard" 
+                className="text-gray-500 hover:text-gray-700 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+              <Link 
+                href="/customers" 
+                className="text-black font-medium px-3 py-2 rounded-lg bg-gray-100 text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Customers
+              </Link>
+              <Link 
+                href="/orders" 
+                className="text-gray-500 hover:text-green-600 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-green-100 text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Orders
+              </Link>
+              <Link 
+                href="/campaigns" 
+                className="text-gray-500 hover:text-purple-600 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-purple-100 text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Campaigns
+              </Link>
+              <Link 
+                href="/segments" 
+                className="text-gray-500 hover:text-orange-600 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-orange-100 text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Segments
+              </Link>
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
