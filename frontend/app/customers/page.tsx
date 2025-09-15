@@ -51,6 +51,12 @@ export default function Customers() {
 
   // Fetch customers from API
   const fetchCustomers = async () => {
+    // Prevent multiple simultaneous requests
+    if (loading) {
+      console.log('⏳ Request already in progress, skipping...');
+      return;
+    }
+    
     try {
       setLoading(true);
       setError(null);
@@ -78,7 +84,11 @@ export default function Customers() {
       });
     } catch (err: any) {
       console.error('Error fetching customers:', err);
-      setError(err.response?.data?.error || err.message || 'Failed to fetch customers');
+      if (err.response?.status === 429) {
+        setError('Too many requests. Please wait a moment and refresh the page.');
+      } else {
+        setError(err.response?.data?.error || err.message || 'Failed to fetch customers');
+      }
     } finally {
       setLoading(false);
     }
