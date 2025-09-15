@@ -64,18 +64,18 @@ export default function CampaignsPage() {
     <div className="min-h-screen bg-white">
       <Header />
       
-      <main className="px-12 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-black">Campaigns</h1>
-          <p className="mt-2 text-gray-600">
+      <main className="px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-black">Campaigns</h1>
+          <p className="mt-2 text-sm sm:text-base text-gray-600">
             Create and manage marketing campaigns for your customers
           </p>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <button
             onClick={() => setCurrentView('create')}
-            className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm sm:text-base"
           >
             Create New Campaign
           </button>
@@ -112,40 +112,48 @@ function Header() {
   const router = useRouter();
   
   return (
-    <header className="flex items-center justify-between px-12 py-4 border-b border-gray-200">
-      <div className="flex items-center space-x-8" style={{marginLeft: '70px'}}>
-        <Link href="/" className="text-2xl font-bold text-black">XenoCRM</Link>
-        <nav className="flex space-x-6">
-          <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors">
+    <header className="flex items-center justify-between px-4 sm:px-6 lg:px-12 py-4 border-b border-gray-200">
+      <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-8">
+        <Link href="/" className="text-xl sm:text-2xl font-bold text-black">XenoCRM</Link>
+        <nav className="hidden md:flex space-x-2 lg:space-x-6">
+          <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 transition-colors text-sm lg:text-base">
             Dashboard
           </Link>
-          <Link href="/customers" className="text-gray-500 hover:text-gray-700 transition-colors">
+          <Link href="/customers" className="text-gray-500 hover:text-gray-700 transition-colors text-sm lg:text-base">
             Customers
           </Link>
-          <Link href="/orders" className="text-gray-500 hover:text-gray-700 transition-colors">
+          <Link href="/orders" className="text-gray-500 hover:text-gray-700 transition-colors text-sm lg:text-base">
             Orders
           </Link>
-          <Link href="/campaigns" className="text-black font-medium">
+          <Link href="/campaigns" className="text-black font-medium text-sm lg:text-base">
             Campaigns
           </Link>
-          <Link href="/segments" className="text-gray-500 hover:text-gray-700 transition-colors">
+          <Link href="/segments" className="text-gray-500 hover:text-gray-700 transition-colors text-sm lg:text-base">
             Segments
           </Link>
         </nav>
       </div>
       
-      <button 
-        onClick={() => {
-          localStorage.removeItem('isAuthenticated');
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          router.push('/signin');
-        }}
-        className="bg-black text-white px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-sm" 
-        style={{marginRight: '70px'}}
-      >
-        Sign Out
-      </button>
+      <div className="flex items-center space-x-2">
+        {/* Mobile menu button */}
+        <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        
+        <button 
+          onClick={() => {
+            localStorage.removeItem('isAuthenticated');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            router.push('/signin');
+          }}
+          className="bg-black text-white px-2 sm:px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-xs sm:text-sm" 
+        >
+          Sign Out
+        </button>
+      </div>
     </header>
   );
 }
@@ -249,33 +257,32 @@ function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () =>
   };
 
   return (
-    <div className="px-6 py-4 hover:bg-gray-50">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h3 className="text-lg font-medium text-gray-900">{campaign.name}</h3>
-            <span className={`px-2 py-1 rounded-full text-sm font-medium ${getStatusColor(campaign.status || 'DRAFT')}`}>
+    <div className="px-4 sm:px-6 py-4 hover:bg-gray-50">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 truncate">{campaign.name}</h3>
+            <span className={`px-2 py-1 rounded-full text-xs sm:text-sm font-medium w-fit ${getStatusColor(campaign.status || 'DRAFT')}`}>
               {campaign.status || 'DRAFT'}
             </span>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             {campaign.segment ? `Target: ${campaign.segment.name}` : 'No segment assigned'}
           </p>
           {campaign.messageTemplate && (
-            <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+            <p className="text-xs sm:text-sm text-gray-600 mt-2 line-clamp-2">
               "{campaign.messageTemplate}"
             </p>
           )}
           <p className="text-xs text-gray-400 mt-1">
             Created: {new Date(campaign.createdAt).toLocaleDateString()}
           </p>
-          
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2 sm:gap-2">
           {campaign.status === 'DRAFT' && (
             <button 
               onClick={handleLaunch}
-              className="text-green-600 hover:text-green-800 text-sm font-medium"
+              className="text-green-600 hover:text-green-800 text-xs sm:text-sm font-medium px-2 py-1 rounded hover:bg-green-50"
             >
               Launch
             </button>
@@ -283,14 +290,14 @@ function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () =>
           {campaign.status !== 'DRAFT' && (
             <button 
               onClick={handleSendMessages}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium px-2 py-1 rounded hover:bg-blue-50"
             >
               Send Messages
             </button>
           )}
           <button 
             onClick={handleDelete}
-            className="text-red-600 hover:text-red-800 text-sm font-medium"
+            className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium px-2 py-1 rounded hover:bg-red-50"
           >
             Delete
           </button>
