@@ -33,11 +33,7 @@ export default function CampaignsPage() {
       const response = await fetch(`${apiUrl}/api/campaigns`);
       const data = await response.json();
       
-      console.log('📊 Campaigns API Response:', data);
-      
       if (data.success) {
-        console.log('📊 Campaigns data:', data.data);
-        console.log('📊 First campaign messageStats:', data.data?.[0]?.messageStats);
         setCampaigns(data.data || []);
       } else {
         console.error('Error fetching campaigns:', data.error);
@@ -155,8 +151,6 @@ function Header() {
 }
 
 function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () => void }) {
-  console.log('📊 CampaignCard received campaign:', campaign);
-  console.log('📊 Campaign messageStats:', campaign.messageStats);
   
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -217,7 +211,6 @@ function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () =>
   const handleSendMessages = async () => {
     if (confirm(`Are you sure you want to send messages for "${campaign.name}"?`)) {
       try {
-        console.log(`📤 Sending messages for campaign: ${campaign.id}`);
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
         const response = await fetch(`${apiUrl}/api/campaigns/${campaign.id}/send-messages`, {
           method: 'POST',
@@ -226,22 +219,18 @@ function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () =>
           }
         });
         
-        console.log(`📤 Response status: ${response.status}`);
         const result = await response.json();
-        console.log(`📤 Response data:`, result);
         
         if (response.ok) {
-          alert(`Messages sent successfully for "${campaign.name}"!\n\nSent to: ${result.data?.messagesSent || 0} customers\nLogs created: ${result.data?.logsCreated || 0}`);
+          alert(`Messages sent successfully for "${campaign.name}"!\n\nSent to: ${result.data?.messagesSent || 0} customers`);
           // Wait a moment for backend to process, then refresh the campaigns list
           setTimeout(() => {
             onRefresh();
           }, 1000);
         } else {
-          console.error('❌ Error response:', result);
-          alert(`Error sending messages: ${result.error || 'Unknown error'}\n\nDetails: ${result.details || 'No details available'}`);
+          alert(`Error sending messages: ${result.error || 'Unknown error'}`);
         }
       } catch (error) {
-        console.error('❌ Error sending messages:', error);
         const errorMessage = error instanceof Error ? error.message : 'Network error';
         alert(`Error sending messages: ${errorMessage}`);
       }
@@ -270,48 +259,6 @@ function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () =>
             Created: {new Date(campaign.createdAt).toLocaleDateString()}
           </p>
           
-          {/* Message Statistics */}
-          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Message Statistics</h4>
-            {campaign.messageStats ? (
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Messages:</span>
-                  <span className="font-medium">{campaign.messageStats.total}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-green-600">Delivered:</span>
-                  <span className="font-medium text-green-600">{campaign.messageStats.sent}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-red-600">Failed:</span>
-                  <span className="font-medium text-red-600">{campaign.messageStats.failed}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-yellow-600">Pending:</span>
-                  <span className="font-medium text-yellow-600">{campaign.messageStats.pending}</span>
-                </div>
-                <div className="flex justify-between col-span-2">
-                  <span className="text-gray-600">Success Rate:</span>
-                  <span className="font-medium text-green-600">{campaign.messageStats.successRate}</span>
-                </div>
-                <div className="flex justify-between col-span-2">
-                  <span className="text-gray-600">Failure Rate:</span>
-                  <span className="font-medium text-red-600">{campaign.messageStats.failureRate}</span>
-                </div>
-                {campaign.messageStats.total === 0 && (
-                  <div className="col-span-2 text-center py-2 mt-2">
-                    <p className="text-xs text-gray-500">No messages sent yet</p>
-                    <p className="text-xs text-gray-400 mt-1">Click "Send Messages" to start the campaign</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-2">
-                <p className="text-sm text-gray-500">Loading statistics...</p>
-              </div>
-            )}
-          </div>
         </div>
         <div className="flex space-x-2">
           {campaign.status === 'DRAFT' && (
@@ -327,7 +274,7 @@ function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () =>
               onClick={handleSendMessages}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
             >
-              {campaign.messageStats && campaign.messageStats.total > 0 ? 'Resend Messages' : 'Send Messages'}
+              Send Messages
             </button>
           )}
           <button 
