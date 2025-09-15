@@ -154,6 +154,66 @@ app.get('/health/auth', (req, res) => {
   });
 });
 
+// Comprehensive status endpoint
+app.get('/status', (req, res) => {
+  const authHeader = req.headers["authorization"];
+  let authorized = false;
+  let user = null;
+  let authError = null;
+
+  // Check authorization
+  if (authHeader) {
+    const token = authHeader.split(" ")[1];
+    if (token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback-secret");
+        authorized = true;
+        user = {
+          id: decoded.id,
+          email: decoded.email,
+          name: decoded.name,
+          googleId: decoded.googleId
+        };
+      } catch (err) {
+        authError = "Invalid or expired token";
+      }
+    } else {
+      authError = "Missing token";
+    }
+  } else {
+    authError = "Missing authorization header";
+  }
+
+  res.status(200).json({
+    status: 'OK',
+    service: 'XenoCRM Backend',
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    database: {
+      connected: true,
+      type: process.env.DATABASE_URL?.includes('postgresql') ? 'PostgreSQL' : 'SQLite'
+    },
+    authentication: {
+      authorized: authorized,
+      user: user,
+      authError: authError,
+      jwtSecret: !!process.env.JWT_SECRET,
+      googleOAuth: {
+        enabled: true,
+        clientId: !!process.env.GOOGLE_CLIENT_ID,
+        clientSecret: !!process.env.GOOGLE_CLIENT_SECRET
+      }
+    },
+    frontend: {
+      url: process.env.FRONTEND_URL || 'https://mini-crm-platform-psi.vercel.app',
+      nextAuthUrl: process.env.NEXTAUTH_URL || 'Not set'
+    },
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // CORS test endpoint
 app.get('/cors-test', (req, res) => {
   res.json({
