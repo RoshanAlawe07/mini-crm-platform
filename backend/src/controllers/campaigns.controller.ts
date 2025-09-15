@@ -542,7 +542,7 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
         
         // Verify that communication logs were created
         console.log(`🔍 Verifying communication logs were created...`);
-        let verificationLogs = [];
+        let verificationLogs: any[] = [];
         try {
           verificationLogs = await prisma.communicationLog.findMany({
             where: { campaignId: campaign.id },
@@ -568,12 +568,23 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
           });
         }
         
+        // Calculate actual success/failure statistics from verification logs
+        const actualSuccess = verificationLogs.filter(log => log.status === 'SENT').length;
+        const actualFailure = verificationLogs.filter(log => log.status === 'FAILED').length;
+        const actualSuccessRate = verificationLogs.length > 0 ? ((actualSuccess / verificationLogs.length) * 100).toFixed(1) : '0.0';
+        
+        console.log(`📊 Final response stats: ${actualSuccess} success, ${actualFailure} failure (${actualSuccessRate}% success rate)`);
+        
         res.json({
           success: true,
           message: `Messages sent to ${customerIds.length} customers`,
           data: {
             campaignId: campaign.id,
-            messagesSent: customerIds.length,
+            totalCustomers: customerIds.length,
+            messagesSent: verificationLogs.length,
+            successCount: actualSuccess,
+            failureCount: actualFailure,
+            successRate: `${actualSuccessRate}%`,
             logsCreated: verificationLogs.length
           }
         });

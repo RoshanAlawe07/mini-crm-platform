@@ -222,7 +222,18 @@ function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () =>
         const result = await response.json();
         
         if (response.ok) {
-          alert(`Messages sent successfully for "${campaign.name}"!\n\nSent to: ${result.data?.messagesSent || 0} customers`);
+          const successCount = result.data?.successCount || 0;
+          const failureCount = result.data?.failureCount || 0;
+          const successRate = result.data?.successRate || '0%';
+          const totalCustomers = result.data?.totalCustomers || 0;
+          
+          alert(`Messages sent successfully for "${campaign.name}"!\n\n` +
+                `📊 Results:\n` +
+                `• Total customers: ${totalCustomers}\n` +
+                `• ✅ Successful: ${successCount}\n` +
+                `• ❌ Failed: ${failureCount}\n` +
+                `• Success rate: ${successRate}`);
+          
           // Wait a moment for backend to process, then refresh the campaigns list
           setTimeout(() => {
             onRefresh();
