@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   return NextResponse.json({ 
-    message: 'API is working',
+    message: 'API is working - Fresh deployment test',
     timestamp: new Date().toISOString(),
     env: {
       hasClientId: !!process.env.CLIENT_ID,
