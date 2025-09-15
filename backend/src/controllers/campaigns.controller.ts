@@ -47,9 +47,24 @@ async function createCommunicationLog(data: any) {
         (error.code === 'P2022' && error.meta?.column === 'messageId')) {
       console.log('⚠️  messageId column not found, creating log without it');
       const { messageId, ...dataWithoutMessageId } = data;
-      return await prisma.communicationLog.create({
-        data: dataWithoutMessageId
-      });
+      console.log('📝 Data without messageId:', dataWithoutMessageId);
+      
+      try {
+        const result = await prisma.communicationLog.create({
+          data: dataWithoutMessageId
+        });
+        console.log(`✅ Communication log created WITHOUT messageId: ${result.id} with status: ${result.status}`);
+        return result;
+      } catch (fallbackError: any) {
+        console.error('❌ Fallback creation also failed:', fallbackError);
+        console.error('Fallback error details:', {
+          name: fallbackError.name,
+          message: fallbackError.message,
+          code: fallbackError.code,
+          meta: fallbackError.meta
+        });
+        throw fallbackError;
+      }
     }
     
     // If unique constraint violation on messageId, try with a new ID

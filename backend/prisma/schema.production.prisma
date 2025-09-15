@@ -100,7 +100,7 @@ model CommunicationLog {
   id              String   @id @default(cuid())
   campaignId      String
   customerId      String
-  messageId       String   @unique @default(cuid()) // UUID for idempotency
+  messageId       String?  @unique // Make optional for backward compatibility
   message         String
   status          String   @default("PENDING") // PENDING, SENT, FAILED
   attempts        Int      @default(0)

@@ -1,62 +1,82 @@
+#!/usr/bin/env node
+
+/**
+ * Fix missing messageId column in production database
+ * This script adds the messageId column to the communication_logs table
+ */
+
 const { PrismaClient } = require('@prisma/client');
 
-const prisma = new PrismaClient();
-
 async function fixMessageIdColumn() {
+  const prisma = new PrismaClient();
+  
   try {
-    console.log('🔧 Fixing messageId column in production database...');
+    console.log('🔧 Starting messageId column fix...');
     
-    // Check if the column exists
+    // Check if messageId column exists
+    console.log('🔍 Checking if messageId column exists...');
+    
     try {
-      await prisma.$executeRaw`SELECT messageId FROM communication_logs LIMIT 1`;
-      console.log('✅ messageId column already exists');
+      // Try to query with messageId to see if column exists
+      await prisma.$queryRaw`SELECT messageId FROM communication_logs LIMIT 1`;
+      console.log('✅ messageId column already exists!');
       return;
     } catch (error) {
-      console.log('❌ messageId column does not exist, adding it...');
+      if (error.message.includes('messageId') || error.message.includes('does not exist')) {
+        console.log('⚠️  messageId column not found, adding it...');
+      } else {
+        throw error;
+      }
     }
     
-    // Add the messageId column
+    // Add messageId column
+    console.log('🔧 Adding messageId column...');
     await prisma.$executeRaw`
       ALTER TABLE communication_logs 
-      ADD COLUMN messageId TEXT UNIQUE DEFAULT (lower(hex(randomblob(16))))
+      ADD COLUMN messageId TEXT UNIQUE DEFAULT gen_random_uuid()
     `;
     
-    console.log('✅ Successfully added messageId column to communication_logs table');
+    console.log('✅ messageId column added successfully!');
     
-    // Update existing records with messageId if they don't have one
-    const existingLogs = await prisma.communicationLog.findMany({
-      where: {
-        messageId: null
-      }
+    // Update existing records to have unique messageIds
+    console.log('🔧 Updating existing records with unique messageIds...');
+    await prisma.$executeRaw`
+      UPDATE communication_logs 
+      SET messageId = gen_random_uuid() 
+      WHERE messageId IS NULL
+    `;
+    
+    console.log('✅ Existing records updated with unique messageIds!');
+    
+    // Verify the fix
+    console.log('🔍 Verifying fix...');
+    const testLogs = await prisma.communicationLog.findMany({
+      take: 3,
+      select: { id: true, messageId: true, status: true }
     });
     
-    if (existingLogs.length > 0) {
-      console.log(`📊 Updating ${existingLogs.length} existing records with messageId...`);
-      
-      for (const log of existingLogs) {
-        const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        await prisma.communicationLog.update({
-          where: { id: log.id },
-          data: { messageId }
-        });
-      }
-      
-      console.log('✅ Updated existing records with messageId');
-    }
-    
-    console.log('🎉 Database fix completed successfully!');
+    console.log('📊 Sample records after fix:', testLogs);
+    console.log('✅ Fix completed successfully!');
     
   } catch (error) {
     console.error('❌ Error fixing messageId column:', error);
-    console.error('Error details:', {
-      name: error.name,
-      message: error.message,
-      code: error.code,
-      meta: error.meta
-    });
+    throw error;
   } finally {
     await prisma.$disconnect();
   }
 }
 
-fixMessageIdColumn();
+// Run the fix
+if (require.main === module) {
+  fixMessageIdColumn()
+    .then(() => {
+      console.log('🎉 MessageId column fix completed!');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('💥 MessageId column fix failed:', error);
+      process.exit(1);
+    });
+}
+
+module.exports = { fixMessageIdColumn };
