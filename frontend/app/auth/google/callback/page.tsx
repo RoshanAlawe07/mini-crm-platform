@@ -13,6 +13,12 @@ export default function GoogleCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        if (!searchParams) {
+          setStatus('error');
+          setMessage('Invalid callback parameters');
+          return;
+        }
+
         const token = searchParams.get('token');
         
         if (!token) {
