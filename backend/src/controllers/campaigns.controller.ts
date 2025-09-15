@@ -158,6 +158,11 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
   
   console.log(`📊 Message simulation completed: ${communicationLogs.length}/${customerIds.length} customers processed`);
   console.log(`📊 Final stats: ${actualSuccess} success (${actualSuccessRate}%), ${actualFailure} failure`);
+  console.log(`📊 Communication logs created:`, communicationLogs.map(log => ({
+    id: log.id,
+    status: log.status,
+    customerId: log.customerId
+  })));
   
   return communicationLogs;
 }
@@ -285,6 +290,14 @@ export async function getAllCampaigns(req: Request, res: Response): Promise<void
 
     // Calculate message statistics for each campaign
     const campaignsWithStats = campaigns.map(campaign => {
+      console.log(`📊 Processing campaign ${campaign.id}: ${campaign.name}`);
+      console.log(`📊 Communication logs count: ${campaign.communicationLogs.length}`);
+      console.log(`📊 Communication logs:`, campaign.communicationLogs.map(log => ({
+        id: log.id,
+        status: log.status,
+        createdAt: log.createdAt
+      })));
+      
       const totalMessages = campaign.communicationLogs.length;
       const sentMessages = campaign.communicationLogs.filter(log => log.status === 'SENT').length;
       const failedMessages = campaign.communicationLogs.filter(log => log.status === 'FAILED').length;
@@ -293,16 +306,20 @@ export async function getAllCampaigns(req: Request, res: Response): Promise<void
       const successRate = totalMessages > 0 ? ((sentMessages / totalMessages) * 100).toFixed(1) : '0.0';
       const failureRate = totalMessages > 0 ? ((failedMessages / totalMessages) * 100).toFixed(1) : '0.0';
 
+      const messageStats = {
+        total: totalMessages,
+        sent: sentMessages,
+        failed: failedMessages,
+        pending: pendingMessages,
+        successRate: `${successRate}%`,
+        failureRate: `${failureRate}%`
+      };
+      
+      console.log(`📊 Calculated messageStats for ${campaign.name}:`, messageStats);
+
       return {
         ...campaign,
-        messageStats: {
-          total: totalMessages,
-          sent: sentMessages,
-          failed: failedMessages,
-          pending: pendingMessages,
-          successRate: `${successRate}%`,
-          failureRate: `${failureRate}%`
-        }
+        messageStats
       };
     });
 
@@ -461,10 +478,18 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
         try {
           verificationLogs = await prisma.communicationLog.findMany({
             where: { campaignId: campaign.id },
-            select: { id: true, status: true, createdAt: true }
+            select: { id: true, status: true, createdAt: true, messageId: true }
           });
           console.log(`📊 Verification: Found ${verificationLogs.length} communication logs for campaign ${campaign.id}`);
           console.log('📊 Verification logs:', verificationLogs);
+          
+          // Count by status
+          const statusCounts = verificationLogs.reduce((acc: Record<string, number>, log) => {
+            acc[log.status] = (acc[log.status] || 0) + 1;
+            return acc;
+          }, {});
+          console.log('📊 Status counts:', statusCounts);
+          
         } catch (verifyError: any) {
           console.error('❌ Error verifying communication logs:', verifyError);
           console.error('Verify error details:', {
