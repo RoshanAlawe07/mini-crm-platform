@@ -62,21 +62,55 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
     const userResponse = await axios.get(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`);
     const userInfo = userResponse.data;
 
-    // Create JWT token for our app
-    const jwt = require('jsonwebtoken');
-    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
-    
-    const token = jwt.sign({
-      id: userInfo.id,
-      email: userInfo.email,
-      name: userInfo.name,
-      picture: userInfo.picture,
-      googleId: userInfo.id
-    }, jwtSecret, { expiresIn: '7d' });
+    // Import Prisma client
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
 
-    // Redirect to frontend callback with token
-    const redirectUrl = `${FRONTEND_URL}/auth/google/callback?token=${token}`;
-    res.redirect(redirectUrl);
+    try {
+      // Find or create user in database
+      let user = await prisma.user.findUnique({
+        where: { googleId: userInfo.id }
+      });
+
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            googleId: userInfo.id,
+            email: userInfo.email,
+            name: userInfo.name,
+            picture: userInfo.picture
+          }
+        });
+      } else {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            email: userInfo.email,
+            name: userInfo.name,
+            picture: userInfo.picture
+          }
+        });
+      }
+
+      // Create JWT token for our app
+      const jwt = require('jsonwebtoken');
+      const jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
+      
+      const token = jwt.sign({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        picture: user.picture,
+        googleId: user.googleId
+      }, jwtSecret, { expiresIn: '7d' });
+
+      // Redirect to frontend callback with token
+      const redirectUrl = `${FRONTEND_URL}/auth/google/callback?token=${token}`;
+      res.redirect(redirectUrl);
+
+    } finally {
+      await prisma.$disconnect();
+    }
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
