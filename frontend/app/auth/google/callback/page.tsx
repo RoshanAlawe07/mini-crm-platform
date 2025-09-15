@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { verifyToken } from '../../../lib/oauth';
+import { verifyToken } from '../../../../lib/oauth';
 
 export default function GoogleCallback() {
   const router = useRouter();
