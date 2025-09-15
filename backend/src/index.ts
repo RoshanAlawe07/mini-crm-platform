@@ -192,9 +192,15 @@ app.get('/api/oauth/test', (req, res) => {
 app.get('/api/oauth/google/url', (req, res) => {
   try {
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;
-    const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mini-crm-platform-psi.vercel.app';
-    const BACKEND_URL = process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com';
+    const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://mini-crm-platform-psi.vercel.app').trim();
+    const BACKEND_URL = (process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com').trim();
     const redirectUri = `${FRONTEND_URL}/auth/google/callback`;
+    
+    // Debug logging
+    console.log('🔍 OAuth Debug Info:');
+    console.log('FRONTEND_URL:', JSON.stringify(FRONTEND_URL));
+    console.log('redirectUri:', JSON.stringify(redirectUri));
+    console.log('GOOGLE_CLIENT_ID:', !!GOOGLE_CLIENT_ID);
     
     // Use more specific scopes and remove problematic parameters
     const scope = 'email profile';
