@@ -42,4 +42,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/api/campaigns', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
 # Start the application with proper setup
-CMD ["npm", "run", "start:railway"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:railway"]
