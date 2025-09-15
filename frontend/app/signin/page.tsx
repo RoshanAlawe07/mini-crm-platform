@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { signInWithGoogle } from '../../lib/oauth';
 
 export default function SignIn() {
   const router = useRouter();
@@ -11,18 +12,20 @@ export default function SignIn() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // No authentication check needed - redirect directly to dashboard
-
   const handleGoogleSignIn = async () => {
-    // Redirect directly to dashboard
-    router.push('/dashboard');
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      alert('Failed to sign in with Google. Please try again.');
+    }
   };
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Redirect directly to dashboard
+    // For now, redirect to dashboard (email/password not implemented)
     router.push('/dashboard');
     setIsSubmitting(false);
   };

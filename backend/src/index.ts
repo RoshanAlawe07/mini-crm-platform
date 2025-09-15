@@ -180,6 +180,7 @@ app.get('/cors-test', (req, res) => {
 
 // Import routes
 import authRoutes from './routes/auth';
+import googleAuthRoutes from './routes/googleAuth.routes';
 import customersRoutes from './routes/customers.routes';
 import ordersRoutes from './routes/orders.routes';
 import segmentsRoutes from './routes/segments.routes';
@@ -192,6 +193,7 @@ import aiRoutes from './routes/ai.routes';
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/oauth', googleAuthRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/segments', segmentsRoutes);

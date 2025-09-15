@@ -3,14 +3,19 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { isAuthenticated } from '../lib/oauth';
 
 export default function Home() {
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Redirect directly to dashboard
-    router.push('/dashboard');
+    // Check if user is already authenticated
+    if (isAuthenticated()) {
+      router.push('/dashboard');
+    } else {
+      router.push('/signin');
+    }
   }, [router]);
 
   return (
@@ -49,12 +54,16 @@ export default function Home() {
               </svg>
             </button>
             
-            <Link 
-              href="/dashboard"
+            <button 
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                router.push('/signin');
+              }}
               className="bg-black text-white px-2 sm:px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-xs sm:text-sm" 
             >
-              Dashboard
-            </Link>
+              Sign Out
+            </button>
           </div>
         </div>
 
