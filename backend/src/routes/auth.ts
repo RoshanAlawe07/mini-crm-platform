@@ -24,32 +24,6 @@ router.post("/google", async (req, res) => {
       });
     }
 
-    let user = await prisma.user.findUnique({
-      where: { googleId }
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          googleId,
-          email,
-          name,
-          picture,
-          provider: 'google'
-        }
-      });
-    } else {
-      user = await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          email,
-          name,
-          picture,
-          provider: 'google'
-        }
-      });
-    }
-
     // Validate JWT_SECRET exists
     if (!process.env.JWT_SECRET) {
       console.error('JWT_SECRET environment variable is not set');
@@ -60,12 +34,15 @@ router.post("/google", async (req, res) => {
       });
     }
 
+    // Create JWT token directly from Google user info (no database operations)
     const token = jwt.sign(
       {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        googleId: user.googleId
+        id: googleId,
+        email: email,
+        name: name,
+        picture: picture,
+        googleId: googleId,
+        provider: 'google'
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -75,10 +52,10 @@ router.post("/google", async (req, res) => {
       success: true,
       data: {
         user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          picture: user.picture
+          id: googleId,
+          email: email,
+          name: name,
+          picture: picture
         },
         token
       }
