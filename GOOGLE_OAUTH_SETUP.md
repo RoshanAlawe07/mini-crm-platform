@@ -24,7 +24,7 @@ Google is blocking the OAuth flow because the app doesn't comply with their OAut
      ```
      http://localhost:3001
      https://mini-crm-platform-psi.vercel.app
-     https://mini-crm-backend.onrender.com
+     https://mini-crm-platform-tnsk.onrender.com
      ```
    - **Authorized redirect URIs**:
      ```
@@ -58,13 +58,13 @@ Update your environment variables with the new credentials:
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
 FRONTEND_URL=https://mini-crm-platform-psi.vercel.app
-BACKEND_URL=https://mini-crm-backend.onrender.com
+BACKEND_URL=https://mini-crm-platform-tnsk.onrender.com
 JWT_SECRET=your_jwt_secret_here
 ```
 
 **Frontend (.env.local)**:
 ```env
-NEXT_PUBLIC_API_URL=https://mini-crm-backend.onrender.com
+NEXT_PUBLIC_API_URL=https://mini-crm-platform-tnsk.onrender.com
 ```
 
 ### 5. Common Issues & Solutions
@@ -120,21 +120,21 @@ NEXT_PUBLIC_API_URL=https://mini-crm-backend.onrender.com
 
 Check these endpoints for debugging:
 
-- **Backend Health**: `https://mini-crm-backend.onrender.com/status`
-- **OAuth Test**: `https://mini-crm-backend.onrender.com/api/oauth/test`
-- **OAuth URL**: `https://mini-crm-backend.onrender.com/api/oauth/google/url`
+- **Backend Health**: `https://mini-crm-platform-tnsk.onrender.com/status`
+- **OAuth Test**: `https://mini-crm-platform-tnsk.onrender.com/api/oauth/test`
+- **OAuth URL**: `https://mini-crm-platform-tnsk.onrender.com/api/oauth/google/url`
 
 ## 🔧 Quick Fix Commands
 
 ```bash
 # Check if backend is running
-curl https://mini-crm-backend.onrender.com/health
+curl https://mini-crm-platform-tnsk.onrender.com/health
 
 # Test OAuth configuration
-curl https://mini-crm-backend.onrender.com/api/oauth/test
+curl https://mini-crm-platform-tnsk.onrender.com/api/oauth/test
 
 # Get OAuth URL
-curl https://mini-crm-backend.onrender.com/api/oauth/google/url
+curl https://mini-crm-platform-tnsk.onrender.com/api/oauth/google/url
 ```
 
 ## 📝 Notes

@@ -193,7 +193,7 @@ app.get('/api/oauth/google/url', (req, res) => {
   try {
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;
     const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mini-crm-platform-psi.vercel.app';
-    const BACKEND_URL = process.env.BACKEND_URL || 'https://mini-crm-backend.onrender.com';
+    const BACKEND_URL = process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com';
     const redirectUri = `${FRONTEND_URL}/auth/google/callback`;
     
     // Use more specific scopes and remove problematic parameters
