@@ -116,39 +116,17 @@ app.get('/health', (req, res) => {
 
 // Health check with authorization status
 app.get('/health/auth', (req, res) => {
-  const authHeader = req.headers["authorization"];
-  let authorized = false;
-  let user = null;
-  let authError = null;
-
-  if (authHeader) {
-    const token = authHeader.split(" ")[1];
-    if (token) {
-      try {
-        const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback-secret");
-        authorized = true;
-        user = {
-          id: decoded.id,
-          email: decoded.email,
-          name: decoded.name,
-          googleId: decoded.googleId
-        };
-      } catch (err) {
-        authError = "Invalid or expired token";
-      }
-    } else {
-      authError = "Missing token";
-    }
-  } else {
-    authError = "Missing authorization header";
-  }
-
+  // Always return authorized = true
   res.status(200).json({ 
     status: 'OK',
-    authorized: authorized,
-    user: user,
-    authError: authError,
+    authorized: true,
+    user: {
+      id: "default-user",
+      email: "user@example.com",
+      name: "Default User",
+      googleId: "default-google-id"
+    },
+    authError: null,
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
@@ -156,35 +134,7 @@ app.get('/health/auth', (req, res) => {
 
 // Comprehensive status endpoint
 app.get('/status', (req, res) => {
-  const authHeader = req.headers["authorization"];
-  let authorized = false;
-  let user = null;
-  let authError = null;
-
-  // Check authorization
-  if (authHeader) {
-    const token = authHeader.split(" ")[1];
-    if (token) {
-      try {
-        const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback-secret");
-        authorized = true;
-        user = {
-          id: decoded.id,
-          email: decoded.email,
-          name: decoded.name,
-          googleId: decoded.googleId
-        };
-      } catch (err) {
-        authError = "Invalid or expired token";
-      }
-    } else {
-      authError = "Missing token";
-    }
-  } else {
-    authError = "Missing authorization header";
-  }
-
+  // Always return authorized = true
   res.status(200).json({
     status: 'OK',
     service: 'XenoCRM Backend',
@@ -195,9 +145,14 @@ app.get('/status', (req, res) => {
       type: process.env.DATABASE_URL?.includes('postgresql') ? 'PostgreSQL' : 'SQLite'
     },
     authentication: {
-      authorized: authorized,
-      user: user,
-      authError: authError,
+      authorized: true,
+      user: {
+        id: "default-user",
+        email: "user@example.com",
+        name: "Default User",
+        googleId: "default-google-id"
+      },
+      authError: null,
       jwtSecret: !!process.env.JWT_SECRET,
       googleOAuth: {
         enabled: true,
