@@ -275,41 +275,41 @@ function SegmentCard({ segment }: { segment: ApiSegment }) {
   };
 
   return (
-    <div className="px-6 py-4 hover:bg-gray-50">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h3 className="text-lg font-medium text-gray-900">{segment.name}</h3>
-            <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+    <div className="px-4 sm:px-6 py-4 hover:bg-gray-50">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 truncate">{segment.name}</h3>
+            <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs sm:text-sm font-medium w-fit">
               {loadingCount ? 'Counting...' : audienceCount !== null ? `${audienceCount} customers` : 'Unknown'}
             </div>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Created by {segment.createdBy}
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-gray-500">
             Created {new Date(segment.createdAt).toLocaleDateString()}
           </p>
           {segment.campaigns.length > 0 && (
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500">
               Used in {segment.campaigns.length} campaign{segment.campaigns.length !== 1 ? 's' : ''}
             </p>
           )}
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2 sm:gap-2">
           <button 
             onClick={viewMatchingCustomers}
             disabled={loadingCustomers}
-            className="text-green-600 hover:text-green-800 text-sm font-medium disabled:opacity-50"
+            className="text-green-600 hover:text-green-800 text-xs sm:text-sm font-medium px-2 py-1 rounded hover:bg-green-50 disabled:opacity-50"
           >
             {loadingCustomers ? 'Loading...' : 'View Customers'}
           </button>
-          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+          <button className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium px-2 py-1 rounded hover:bg-blue-50">
             Edit
           </button>
           <button 
             onClick={handleDelete}
-            className="text-red-600 hover:text-red-800 text-sm font-medium"
+            className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium px-2 py-1 rounded hover:bg-red-50"
           >
             Delete
           </button>

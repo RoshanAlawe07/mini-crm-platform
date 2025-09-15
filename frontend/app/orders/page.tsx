@@ -305,8 +305,8 @@ export default function Orders() {
         
           {/* Filter Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Customer</label>
                 <select 
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
@@ -321,7 +321,7 @@ export default function Orders() {
                   ))}
                 </select>
               </div>
-              <div className="flex-1">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
                 <input 
                   type="date" 
@@ -330,7 +330,7 @@ export default function Orders() {
                   onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
                 />
               </div>
-              <div className="flex-1">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
                 <input 
                   type="date" 
@@ -339,10 +339,10 @@ export default function Orders() {
                   onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
                 />
               </div>
-              <div className="flex items-start">
+              <div className="flex items-end">
                 <button 
                   onClick={handleApplyFilters}
-                  className="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-900 transition-colors mt-6"
+                  className="w-full bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-900 transition-colors"
                 >
                   Apply Filter
                 </button>
