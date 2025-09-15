@@ -188,6 +188,36 @@ app.get('/api/oauth/test', (req, res) => {
   });
 });
 
+// Google OAuth endpoints
+app.get('/api/oauth/google/url', (req, res) => {
+  try {
+    const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;
+    const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mini-crm-platform-psi.vercel.app';
+    const redirectUri = `${FRONTEND_URL}/auth/google/callback`;
+    const scope = 'openid email profile';
+    
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${GOOGLE_CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=code&` +
+      `scope=${encodeURIComponent(scope)}&` +
+      `access_type=offline&` +
+      `prompt=consent`;
+
+    res.json({
+      success: true,
+      authUrl: authUrl,
+      redirectUri: redirectUri
+    });
+  } catch (error) {
+    console.error('Error generating Google auth URL:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate Google auth URL'
+    });
+  }
+});
+
 // Import routes
 import authRoutes from './routes/auth';
 import googleAuthRoutes from './routes/googleAuth.routes';
