@@ -19,7 +19,7 @@ async function createCommunicationLog(data: any) {
   try {
     console.log(`📝 Creating communication log for customer: ${data.customerId}`);
     
-    // Ensure messageId is always provided
+    // Try with messageId first
     const logData = {
       ...data,
       messageId: data.messageId || generateMessageId()
@@ -43,7 +43,8 @@ async function createCommunicationLog(data: any) {
     });
     
     // If messageId column doesn't exist, try without it
-    if (error.code === 'P2022' && error.meta?.column === 'messageId') {
+    if (error.message.includes('messageId') || error.message.includes('does not exist') || 
+        (error.code === 'P2022' && error.meta?.column === 'messageId')) {
       console.log('⚠️  messageId column not found, creating log without it');
       const { messageId, ...dataWithoutMessageId } = data;
       return await prisma.communicationLog.create({
@@ -346,7 +347,13 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
     // Test database connection and table access
     try {
       const testLogs = await prisma.communicationLog.findMany({
-        take: 1
+        take: 1,
+        select: {
+          id: true,
+          status: true,
+          createdAt: true
+          // Don't select messageId to avoid column not found error
+        }
       });
       console.log(`✅ Database connection test successful - found ${testLogs.length} existing logs`);
     } catch (dbError: any) {
@@ -356,12 +363,18 @@ export async function sendMessages(req: Request, res: Response): Promise<void> {
         code: dbError.code,
         meta: dbError.meta
       });
-      res.status(500).json({
-        success: false,
-        error: 'Database connection failed',
-        details: dbError.message
-      });
-      return;
+      
+      // If it's a column not found error, try to continue anyway
+      if (dbError.message.includes('messageId') || dbError.message.includes('does not exist')) {
+        console.log('⚠️  messageId column missing, but continuing with message sending...');
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Database connection failed',
+          details: dbError.message
+        });
+        return;
+      }
     }
     
     const campaign = await prisma.campaign.findUnique({
