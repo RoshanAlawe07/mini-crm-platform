@@ -34,7 +34,8 @@ router.post("/google", async (req, res) => {
           googleId,
           email,
           name,
-          picture
+          picture,
+          provider: 'google'
         }
       });
     } else {
@@ -43,7 +44,8 @@ router.post("/google", async (req, res) => {
         data: {
           email,
           name,
-          picture
+          picture,
+          provider: 'google'
         }
       });
     }

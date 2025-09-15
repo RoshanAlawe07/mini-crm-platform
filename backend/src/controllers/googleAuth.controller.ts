@@ -78,7 +78,8 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
             googleId: userInfo.id,
             email: userInfo.email,
             name: userInfo.name,
-            picture: userInfo.picture
+            picture: userInfo.picture,
+            provider: 'google'
           }
         });
       } else {
@@ -87,7 +88,8 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
           data: {
             email: userInfo.email,
             name: userInfo.name,
-            picture: userInfo.picture
+            picture: userInfo.picture,
+            provider: 'google'
           }
         });
       }
