@@ -13,12 +13,35 @@ export async function createSegment(req: Request, res: Response) {
     const parsed = segmentSchema.parse(req.body);
     console.log('Parsed segment data:', JSON.stringify(parsed, null, 2));
     
+    // Get or create a default user
+    let userId = parsed.createdBy;
+    if (!userId || userId === 'default-user') {
+      // Try to find or create a default user
+      let defaultUser = await prisma.user.findFirst({
+        where: { email: 'default@system.com' }
+      });
+      
+      if (!defaultUser) {
+        defaultUser = await prisma.user.create({
+          data: {
+            email: 'default@system.com',
+            name: 'Default User',
+            googleId: 'default-google-id',
+            provider: 'system'
+          }
+        });
+        console.log('Created default user:', defaultUser.id);
+      }
+      
+      userId = defaultUser.id;
+    }
+    
     const segment = await prisma.segment.create({
       data: {
         name: parsed.name,
         description: parsed.description || '',
         rulesJson: parsed.rulesJson || '{}',
-        userId: parsed.createdBy || 'default-user', // Map createdBy to userId with fallback
+        userId: userId,
       },
     });
 
