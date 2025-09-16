@@ -206,12 +206,20 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
 
 export async function createCampaign(req: Request, res: Response): Promise<void> {
   try {
+    // Validate required fields
+    if (!req.body.name || typeof req.body.name !== 'string' || req.body.name.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campaign name is required'
+      });
+    }
+
     // Get user ID from request (should be set by auth middleware)
     let userId = (req as any).user?.id || req.body.userId;
     
     // Handle userId - make it optional
-    if (userId === 'default-user') {
-      userId = null; // Set to null instead of creating a default user
+    if (!userId || userId === 'default-user' || userId === 'unknown-user') {
+      userId = null; // Set to null for invalid or missing userId
     }
     
     // Validate segmentId if provided

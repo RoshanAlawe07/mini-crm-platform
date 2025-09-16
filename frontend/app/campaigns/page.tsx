@@ -511,10 +511,10 @@ function CreateCampaignPage({
 
     setLoading(true);
     try {
-      // Get user ID from localStorage
+      // Get user ID from localStorage - only include if valid
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
-      const userId = user?.id || 'unknown-user';
+      const userId = user?.id;
 
       const campaignData = {
         name: campaignName,
@@ -522,7 +522,7 @@ function CreateCampaignPage({
         segmentId: targetSegment || null,
         status: asDraft ? 'DRAFT' : 'SCHEDULED',
         rules_json: '{}', // Default empty rules
-        userId: userId
+        ...(userId && { userId }) // Only include userId if it exists
       };
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
