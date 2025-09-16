@@ -173,3 +173,46 @@ export async function filterCustomersByRules(req: Request, res: Response): Promi
     });
   }
 }
+
+export async function deleteCustomer(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        error: 'Customer ID is required'
+      });
+      return;
+    }
+
+    // Check if customer exists
+    const existingCustomer = await prisma.customer.findUnique({
+      where: { id: id }
+    });
+
+    if (!existingCustomer) {
+      res.status(404).json({
+        success: false,
+        error: 'Customer not found'
+      });
+      return;
+    }
+
+    // Delete the customer
+    await prisma.customer.delete({
+      where: { id: id }
+    });
+
+    res.json({
+      success: true,
+      message: 'Customer deleted successfully'
+    });
+  } catch (error: any) {
+    console.error('Error deleting customer:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete customer'
+    });
+  }
+}

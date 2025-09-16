@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { isAuthenticated } from '../lib/oauth';
+import config from '../config';
 
 export default function Home() {
   const router = useRouter();
@@ -36,6 +37,9 @@ export default function Home() {
               </Link>
               <Link href="/segments" className="text-gray-500 hover:text-orange-600 transition-colors duration-300 px-2 lg:px-3 py-2 rounded-lg hover:bg-orange-100 text-sm lg:text-base">
                 Segments
+              </Link>
+              <Link href={`${config.API_BASE_URL}/api-docs`} target="_blank" className="text-gray-500 hover:text-indigo-600 transition-colors duration-300 px-2 lg:px-3 py-2 rounded-lg hover:bg-indigo-100 text-sm lg:text-base">
+                API Docs
               </Link>
             </nav>
           </div>
@@ -112,6 +116,14 @@ export default function Home() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Segments
+              </Link>
+              <Link 
+                href={`${config.API_BASE_URL}/api-docs`} 
+                target="_blank"
+                className="text-gray-500 hover:text-indigo-600 transition-colors duration-300 px-3 py-2 rounded-lg hover:bg-indigo-100 text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                API Docs
               </Link>
             </nav>
           </div>

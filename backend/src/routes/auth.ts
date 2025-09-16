@@ -6,13 +6,160 @@ import { register, login } from "../controllers/authController";
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Signup endpoint
+/**
+ * @swagger
+ * /api/auth/signup:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - name
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User email address
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: User password
+ *                 example: password123
+ *               name:
+ *                 type: string
+ *                 description: User full name
+ *                 example: John Doe
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: User already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post("/signup", register);
 
-// Signin endpoint
+/**
+ * @swagger
+ * /api/auth/signin:
+ *   post:
+ *     summary: Login user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User email address
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 description: User password
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       401:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post("/signin", login);
 
-// Google OAuth callback
+/**
+ * @swagger
+ * /api/auth/google:
+ *   post:
+ *     summary: Authenticate user with Google OAuth
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - googleId
+ *               - email
+ *             properties:
+ *               googleId:
+ *                 type: string
+ *                 description: Google user ID
+ *                 example: google_1234567890
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User email from Google
+ *                 example: user@gmail.com
+ *               name:
+ *                 type: string
+ *                 description: User full name from Google
+ *                 example: John Doe
+ *               picture:
+ *                 type: string
+ *                 format: uri
+ *                 description: User profile picture URL from Google
+ *                 example: https://lh3.googleusercontent.com/a/...
+ *     responses:
+ *       200:
+ *         description: Google authentication successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       400:
+ *         description: Missing required Google profile data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server configuration error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post("/google", async (req, res) => {
   try {
     const { googleId, email, name, picture } = req.body;
@@ -69,7 +216,43 @@ router.post("/google", async (req, res) => {
   }
 });
 
-// Get current user profile
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Missing or invalid authorization token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get("/me", async (req, res) => {
   try {
     const authHeader = req.headers["authorization"];
@@ -115,7 +298,27 @@ router.get("/me", async (req, res) => {
   }
 });
 
-// Logout (client-side token removal)
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Logged out successfully
+ */
 router.post("/logout", (req, res) => {
   res.json({
     success: true,

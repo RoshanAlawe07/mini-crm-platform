@@ -51,7 +51,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3001;
 
 // Security middleware
 app.use(helmet());
@@ -265,6 +265,7 @@ import segmentsRoutes from './routes/segments.routes';
 import campaignsRoutes from './routes/campaigns.routes';
 import deliveryReceiptRoutes from './routes/deliveryReceipt.routes';
 import aiRoutes from './routes/ai.routes';
+import vendorRoutes from './routes/vendor';
 
 // Import workers
 // import './workers/campaign.worker';
@@ -281,6 +282,7 @@ app.use('/api/segments', segmentsRoutes);
 app.use('/api/campaigns', campaignsRoutes);
 app.use('/api/delivery-receipt', deliveryReceiptRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/vendor', vendorRoutes);
 // app.use('/api/users', userRoutes);
 // app.use('/api/contacts', contactRoutes);
 

@@ -1,5 +1,5 @@
 import express from "express";
-import { createCustomer, getCustomers, filterCustomersByRules } from "../controllers/customers.controller";
+import { createCustomer, getCustomers, filterCustomersByRules, deleteCustomer } from "../controllers/customers.controller";
 
 const router = express.Router();
 
@@ -193,5 +193,54 @@ router.get("/", getCustomers);
  *               $ref: '#/components/schemas/Error'
  */
 router.post("/filter-by-rules", filterCustomersByRules);
+
+/**
+ * @swagger
+ * /api/customers/{id}:
+ *   delete:
+ *     summary: Delete a customer
+ *     tags: [Customers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Customer ID
+ *         example: "123"
+ *     responses:
+ *       200:
+ *         description: Customer deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Customer deleted successfully
+ *       400:
+ *         description: Bad request - Customer ID is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Customer not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.delete("/:id", deleteCustomer);
 
 export default router;
