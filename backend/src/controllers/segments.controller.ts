@@ -10,7 +10,7 @@ import { SqlEvaluator } from "../services/sqlEvaluator.service";
 
 const prisma = new PrismaClient();
 
-export async function createSegment(req: Request, res: Response) {
+export async function createSegment(req: Request, res: Response): Promise<void> {
   try {
     console.log(
       "Creating segment with request body:",
@@ -21,10 +21,11 @@ export async function createSegment(req: Request, res: Response) {
     const { name, description, rulesJson, createdBy } = req.body;
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: "Segment name is required",
       });
+      return;
     }
 
     // Handle userId - make it optional
@@ -43,7 +44,7 @@ export async function createSegment(req: Request, res: Response) {
     });
 
     console.log("Segment created successfully:", segment.id);
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       data: segment,
     });
@@ -72,11 +73,11 @@ export async function createSegment(req: Request, res: Response) {
       JSON.stringify(errorResponse, null, 2),
     );
 
-    return res.status(400).json(errorResponse);
+    res.status(400).json(errorResponse);
   }
 }
 
-export async function getAllSegments(req: Request, res: Response) {
+export async function getAllSegments(req: Request, res: Response): Promise<void> {
   try {
     const segments = await prisma.segment.findMany({
       orderBy: { createdAt: "desc" },
@@ -91,13 +92,13 @@ export async function getAllSegments(req: Request, res: Response) {
       },
     });
 
-    return res.json({
+    res.json({
       success: true,
       data: segments,
     });
   } catch (error: any) {
     console.error("Error fetching segments:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       error: "Failed to fetch segments",
     });
@@ -258,19 +259,19 @@ export async function getSegmentCustomers(
   }
 }
 
-export async function validateRules(req: Request, res: Response) {
+export async function validateRules(req: Request, res: Response): Promise<void> {
   try {
     const { rules } = req.body;
 
     const validation = RulesEngine.validateRules(rules);
 
-    return res.json({
+    res.json({
       success: true,
       data: validation,
     });
   } catch (error: any) {
     console.error("Error validating rules:", error);
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: "Failed to validate rules",
     });

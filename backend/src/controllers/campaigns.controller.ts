@@ -208,10 +208,11 @@ export async function createCampaign(req: Request, res: Response): Promise<void>
   try {
     // Validate required fields
     if (!req.body.name || typeof req.body.name !== 'string' || req.body.name.trim().length === 0) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Campaign name is required'
       });
+      return;
     }
 
     // Get user ID from request (should be set by auth middleware)
