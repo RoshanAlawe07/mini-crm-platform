@@ -22,7 +22,8 @@ function CallbackInner() {
         }
 
         const token = searchParams.get('token');
-        const state = searchParams.get('state');
+        const userParam = searchParams.get('user');
+        const success = searchParams.get('success');
         const error = searchParams.get('error');
         
         if (error) {
@@ -37,26 +38,47 @@ function CallbackInner() {
           return;
         }
 
-        // Note: State parameter is optional for this flow
-
-        // Verify the token
-        const result = await verifyToken(token);
-        
-        if (result.success && result.user) {
-          // Store user data and token
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(result.user));
-          
-          setStatus('success');
-          setMessage('Successfully signed in! Redirecting to home...');
-          
-          // Redirect to home page after a short delay
-          setTimeout(() => {
-            router.push('/');
-          }, 2000);
+        if (success === 'true' && userParam) {
+          try {
+            // Parse user info from URL parameter
+            const user = JSON.parse(decodeURIComponent(userParam));
+            
+            // Store user data and token
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            setStatus('success');
+            setMessage('Successfully signed in! Redirecting to home...');
+            
+            // Redirect to home page after a short delay
+            setTimeout(() => {
+              router.push('/');
+            }, 2000);
+          } catch (parseError) {
+            console.error('Error parsing user data:', parseError);
+            setStatus('error');
+            setMessage('Invalid user data received');
+          }
         } else {
-          setStatus('error');
-          setMessage(result.error || 'Authentication failed');
+          // Fallback: try to verify token with backend
+          const result = await verifyToken(token);
+          
+          if (result.success && result.user) {
+            // Store user data and token
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(result.user));
+            
+            setStatus('success');
+            setMessage('Successfully signed in! Redirecting to home...');
+            
+            // Redirect to home page after a short delay
+            setTimeout(() => {
+              router.push('/');
+            }, 2000);
+          } else {
+            setStatus('error');
+            setMessage(result.error || 'Authentication failed');
+          }
         }
       } catch (error) {
         console.error('OAuth callback error:', error);

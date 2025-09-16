@@ -157,8 +157,14 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
 
     console.log('JWT token created successfully');
 
-    // Redirect to frontend callback with token
-    const redirectUrl = `${FRONTEND_URL}/auth/google/callback?token=${token}`;
+    // Redirect to frontend with token and user info
+    const redirectUrl = `${FRONTEND_URL}/auth/google/callback?token=${encodeURIComponent(token)}&success=true&user=${encodeURIComponent(JSON.stringify({
+      id: userInfo.id,
+      email: userInfo.email,
+      name: userInfo.name,
+      picture: userInfo.picture,
+      googleId: userInfo.id
+    }))}`;
     console.log('Redirecting to frontend:', redirectUrl);
     res.redirect(redirectUrl);
 
