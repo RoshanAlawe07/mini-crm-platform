@@ -225,47 +225,38 @@ app.get('/api/oauth/test', (req, res) => {
   });
 });
 
-// Get current user endpoint - verifies cookie-based authentication
+// Get current user endpoint - simple cookie-based authentication
 app.get('/api/auth/me', (req, res) => {
   try {
-    const token = req.cookies.authToken;
+    const isAuthenticated = req.cookies.isAuthenticated;
+    const userInfoCookie = req.cookies.userInfo;
     
-    if (!token) {
+    if (!isAuthenticated || isAuthenticated !== 'true' || !userInfoCookie) {
       return res.status(401).json({
         success: false,
-        error: 'No authentication token found'
+        error: 'Not authenticated'
       });
     }
 
-    const jwt = require('jsonwebtoken');
-    const jwtSecret = process.env.JWT_SECRET;
-    
-    if (!jwtSecret) {
-      console.error('JWT_SECRET not configured');
-      return res.status(500).json({
-        success: false,
-        error: 'Server configuration error'
-      });
-    }
-
-    // Verify the JWT token
-    const decoded = jwt.verify(token, jwtSecret);
+    // Parse user info from cookie
+    const userInfo = JSON.parse(userInfoCookie);
     
     return res.json({
       success: true,
-      user: {
-        id: decoded.userId,
-        email: decoded.email,
-        name: decoded.name,
-        picture: decoded.picture,
-        googleId: decoded.googleId
-      }
+      user: userInfo
     });
   } catch (error) {
     console.error('Auth verification error:', error);
     
-    // Clear invalid cookie
-    res.clearCookie('authToken', {
+    // Clear invalid cookies
+    res.clearCookie('isAuthenticated', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/'
+    });
+    
+    res.clearCookie('userInfo', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -274,16 +265,23 @@ app.get('/api/auth/me', (req, res) => {
     
     return res.status(401).json({
       success: false,
-      error: 'Invalid or expired token'
+      error: 'Invalid session'
     });
   }
 });
 
-// Logout endpoint - clears the auth cookie
+// Logout endpoint - clears the auth cookies
 app.post('/api/auth/logout', (req, res) => {
   try {
-    // Clear the auth cookie
-    res.clearCookie('authToken', {
+    // Clear the authentication cookies
+    res.clearCookie('isAuthenticated', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/'
+    });
+    
+    res.clearCookie('userInfo', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
