@@ -70,7 +70,16 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
     }
 
     const redirectUri = `${process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com'}/api/oauth/google/callback`;
-    console.log('Exchanging code for token with redirect URI:', redirectUri);
+    
+    console.log('🔍 OAuth Callback Debug Info:');
+    console.log('BACKEND_URL:', JSON.stringify(process.env.BACKEND_URL));
+    console.log('FRONTEND_URL:', JSON.stringify(process.env.FRONTEND_URL));
+    console.log('redirectUri:', JSON.stringify(redirectUri));
+    console.log('GOOGLE_CLIENT_ID:', !!GOOGLE_CLIENT_ID);
+    console.log('GOOGLE_CLIENT_SECRET:', !!GOOGLE_CLIENT_SECRET);
+    console.log('Authorization code received:', !!code);
+    console.log('Full request URL:', req.url);
+    console.log('Request headers:', req.headers);
 
     // Prepare token exchange request
     const tokenRequest = {

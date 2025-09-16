@@ -310,12 +310,6 @@ app.get('/api/oauth/google', (req, res) => {
     const BACKEND_URL = (process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com').trim();
     const redirectUri = `${BACKEND_URL}/api/oauth/google/callback`;
     
-    // Debug logging
-    console.log('🔍 Direct OAuth Debug Info:');
-    console.log('BACKEND_URL:', JSON.stringify(BACKEND_URL));
-    console.log('redirectUri:', JSON.stringify(redirectUri));
-    console.log('GOOGLE_CLIENT_ID:', !!GOOGLE_CLIENT_ID);
-    
     // Use more specific scopes and remove problematic parameters
     const scope = 'email profile';
     const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -328,6 +322,14 @@ app.get('/api/oauth/google', (req, res) => {
       `state=${state}&` +
       `access_type=online&` +
       `include_granted_scopes=true`;
+
+    // Debug logging
+    console.log('🔍 Direct OAuth Debug Info:');
+    console.log('BACKEND_URL:', JSON.stringify(BACKEND_URL));
+    console.log('redirectUri:', JSON.stringify(redirectUri));
+    console.log('GOOGLE_CLIENT_ID:', !!GOOGLE_CLIENT_ID);
+    console.log('GOOGLE_CLIENT_ID value:', GOOGLE_CLIENT_ID);
+    console.log('Generated auth URL:', authUrl);
 
     console.log('Redirecting to Google OAuth:', authUrl);
     res.redirect(authUrl);
