@@ -385,7 +385,11 @@ export default function Customers() {
                           <td className="px-6 py-4 text-sm text-gray-900">${customer.totalSpend.toFixed(2)}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{customer.visitsCount}</td>
                           <td className="px-6 py-4 text-sm text-gray-900">
-                            {new Date(customer.createdAt).toLocaleDateString()}
+                            {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            }) : 'N/A'}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900">
                             <div className="flex items-center gap-2">

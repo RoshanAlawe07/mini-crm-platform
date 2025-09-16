@@ -388,7 +388,11 @@ export default function Orders() {
                             <td className="px-6 py-4 text-sm text-gray-900">{order.customerName}</td>
                             <td className="px-6 py-4 text-sm text-gray-900">${order.amount.toFixed(2)}</td>
                             <td className="px-6 py-4 text-sm text-gray-900">
-                              {new Date(order.date).toLocaleDateString()}
+                              {order.date ? new Date(order.date).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              }) : 'N/A'}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-900">
                               <div className="flex items-center gap-2">
