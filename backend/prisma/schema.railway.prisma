@@ -18,7 +18,6 @@ model User {
   name      String
   password  String?  // For email/password authentication
   picture   String?
-  provider  String?  // For storing "credentials" or "google"
   role      String   @default("USER")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
