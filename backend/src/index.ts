@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -98,6 +99,9 @@ app.use(limiter);
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Cookie parsing middleware
+app.use(cookieParser());
 
 // Compression middleware
 app.use(compression());
@@ -219,6 +223,84 @@ app.get('/api/oauth/test', (req, res) => {
     redirectUri: redirectUri,
     jwtSecret: !!process.env.JWT_SECRET
   });
+});
+
+// Get current user endpoint - verifies cookie-based authentication
+app.get('/api/auth/me', (req, res) => {
+  try {
+    const token = req.cookies.authToken;
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'No authentication token found'
+      });
+    }
+
+    const jwt = require('jsonwebtoken');
+    const jwtSecret = process.env.JWT_SECRET;
+    
+    if (!jwtSecret) {
+      console.error('JWT_SECRET not configured');
+      return res.status(500).json({
+        success: false,
+        error: 'Server configuration error'
+      });
+    }
+
+    // Verify the JWT token
+    const decoded = jwt.verify(token, jwtSecret);
+    
+    return res.json({
+      success: true,
+      user: {
+        id: decoded.userId,
+        email: decoded.email,
+        name: decoded.name,
+        picture: decoded.picture,
+        googleId: decoded.googleId
+      }
+    });
+  } catch (error) {
+    console.error('Auth verification error:', error);
+    
+    // Clear invalid cookie
+    res.clearCookie('authToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/'
+    });
+    
+    return res.status(401).json({
+      success: false,
+      error: 'Invalid or expired token'
+    });
+  }
+});
+
+// Logout endpoint - clears the auth cookie
+app.post('/api/auth/logout', (req, res) => {
+  try {
+    // Clear the auth cookie
+    res.clearCookie('authToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/'
+    });
+    
+    res.json({
+      success: true,
+      message: 'Logged out successfully'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Logout failed'
+    });
+  }
 });
 
 // Direct Google OAuth redirect endpoint

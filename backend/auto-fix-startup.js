@@ -66,31 +66,31 @@ async function autoFixDatabase() {
       console.log('✅ Created unique index for orderId');
     }
 
-    // Check communicationLogs.messageId
+    // Check communication_logs.messageId
     let communicationLogsHasMessageId = false;
     try {
       await prisma.$queryRaw`
-        SELECT "messageId" FROM "CommunicationLog" LIMIT 1;
+        SELECT "messageId" FROM "communication_logs" LIMIT 1;
       `;
       communicationLogsHasMessageId = true;
-      console.log('✅ CommunicationLog.messageId column exists');
+      console.log('✅ communication_logs.messageId column exists');
     } catch (error) {
-      console.log('❌ CommunicationLog.messageId column missing - will add it');
+      console.log('❌ communication_logs.messageId column missing - will add it');
     }
 
-    // Add missing messageId column to CommunicationLog table
+    // Add missing messageId column to communication_logs table
     if (!communicationLogsHasMessageId) {
-      console.log('📊 Adding messageId column to CommunicationLog table...');
+      console.log('📊 Adding messageId column to communication_logs table...');
       await prisma.$executeRaw`
-        ALTER TABLE "CommunicationLog"
+        ALTER TABLE "communication_logs"
         ADD COLUMN IF NOT EXISTS "messageId" TEXT;
       `;
-      console.log('✅ Added messageId column to CommunicationLog');
+      console.log('✅ Added messageId column to communication_logs');
       
       // Create unique index for messageId
       console.log('🔑 Creating unique index for messageId...');
       await prisma.$executeRaw`
-        CREATE UNIQUE INDEX IF NOT EXISTS "CommunicationLog_messageId_key" ON "CommunicationLog"("messageId");
+        CREATE UNIQUE INDEX IF NOT EXISTS "communication_logs_messageId_key" ON "communication_logs"("messageId");
       `;
       console.log('✅ Created unique index for messageId');
     }
@@ -114,14 +114,14 @@ async function autoFixDatabase() {
     const communicationLogColumns = await prisma.$queryRaw`
       SELECT column_name 
       FROM information_schema.columns 
-      WHERE table_name = 'CommunicationLog' 
+      WHERE table_name = 'communication_logs' 
         AND column_name = 'messageId';
     `;
 
     console.log('📋 Verification results:');
     console.log('  - campaigns.rulesJson:', campaignsColumns.length > 0 ? '✅ EXISTS' : '❌ MISSING');
     console.log('  - orders.orderId:', ordersColumns.length > 0 ? '✅ EXISTS' : '❌ MISSING');
-    console.log('  - CommunicationLog.messageId:', communicationLogColumns.length > 0 ? '✅ EXISTS' : '❌ MISSING');
+    console.log('  - communication_logs.messageId:', communicationLogColumns.length > 0 ? '✅ EXISTS' : '❌ MISSING');
 
     if (campaignsColumns.length > 0 && ordersColumns.length > 0 && communicationLogColumns.length > 0) {
       console.log('🎉 Database auto-fix completed successfully!');

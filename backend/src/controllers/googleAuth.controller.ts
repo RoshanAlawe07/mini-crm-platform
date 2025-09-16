@@ -157,8 +157,19 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
 
     console.log('JWT token created successfully');
 
-    // Redirect to frontend with token (as per specification)
-    const redirectUrl = `${FRONTEND_URL}/auth/callback?token=${encodeURIComponent(token)}`;
+    // Set secure HTTP-only cookie with JWT token
+    res.cookie('authToken', token, {
+      httpOnly: true,           // Can't be accessed from JavaScript (XSS protection)
+      secure: process.env.NODE_ENV === 'production', // Only over HTTPS in production
+      sameSite: 'lax',          // CSRF protection
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      path: '/'                 // Available site-wide
+    });
+
+    console.log('Set HTTP-only cookie with JWT token');
+    
+    // Redirect to frontend success page
+    const redirectUrl = `${FRONTEND_URL}/auth/callback?success=true`;
     console.log('Redirecting to frontend:', redirectUrl);
     res.redirect(redirectUrl);
 

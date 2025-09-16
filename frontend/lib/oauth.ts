@@ -64,27 +64,77 @@ export const signInWithGoogle = async (): Promise<void> => {
   }
 };
 
-// Sign out
-export const signOut = (): void => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  window.location.href = '/';
+// Sign out - clears cookie via backend
+export const signOut = async (): Promise<void> => {
+  try {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
+    
+    // Call backend logout endpoint to clear cookie
+    await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: 'POST',
+      credentials: 'include', // Include cookies in the request
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    // Clear any local storage (fallback)
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Redirect to home page
+    window.location.href = '/';
+  } catch (error) {
+    console.error('Logout error:', error);
+    // Still redirect even if logout fails
+    window.location.href = '/';
+  }
 };
 
-// Get current user from localStorage
-export const getCurrentUser = (): User | null => {
+// Get current user - now requires API call to verify cookie-based auth
+export const getCurrentUser = async (): Promise<User | null> => {
   try {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:3001';
+    
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      credentials: 'include', // Include cookies in the request
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.user) {
+        // Store user in localStorage for quick access (optional)
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return data.user;
+      }
+    }
+    
+    // Clear localStorage if auth fails
+    localStorage.removeItem('user');
+    return null;
   } catch (error) {
     console.error('Error getting current user:', error);
+    localStorage.removeItem('user');
     return null;
   }
 };
 
-// Check if user is authenticated
-export const isAuthenticated = (): boolean => {
-  const token = localStorage.getItem('token');
-  const user = getCurrentUser();
-  return !!(token && user);
+// Check if user is authenticated - now requires API call
+export const isAuthenticated = async (): Promise<boolean> => {
+  try {
+    const user = await getCurrentUser();
+    return !!user;
+  } catch (error) {
+    console.error('Error checking authentication:', error);
+    return false;
+  }
+};
+
+// Sync version for backward compatibility (uses localStorage)
+export const isAuthenticatedSync = (): boolean => {
+  const user = localStorage.getItem('user');
+  return !!user;
 };
