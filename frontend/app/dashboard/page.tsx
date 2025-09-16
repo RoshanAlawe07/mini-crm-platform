@@ -9,7 +9,8 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState({
     totalCustomers: 0,
     activeCampaigns: 0,
-    totalIncome: 0
+    totalIncome: 0,
+    totalSegments: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -38,10 +39,15 @@ export default function Dashboard() {
         ? ordersData.orders.reduce((sum: number, order: any) => sum + (order.amount || 0), 0)
         : 0;
 
+      const segmentsResponse = await fetch(`${apiUrl}/api/segments`);
+      const segmentsData = await segmentsResponse.json();
+      const totalSegments = segmentsData.success && segmentsData.data ? segmentsData.data.length : 0;
+
       setDashboardData({
         totalCustomers,
         activeCampaigns,
-        totalIncome
+        totalIncome,
+        totalSegments
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -158,7 +164,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <div className="bg-gray-50 p-6 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Customers</h3>
                 <p className="text-3xl font-bold text-black">{dashboardData.totalCustomers.toLocaleString()}</p>
@@ -171,17 +177,21 @@ export default function Dashboard() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Income</h3>
                 <p className="text-3xl font-bold text-black">${dashboardData.totalIncome.toLocaleString()}</p>
               </div>
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Segments</h3>
+                <p className="text-3xl font-bold text-black">{dashboardData.totalSegments}</p>
+              </div>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">CRM Overview Dashboard</h3>
               
-              <div className="h-80 flex items-end justify-center space-x-8">
+              <div className="h-80 flex items-end justify-center space-x-6">
                 <div className="flex flex-col items-center">
                   <div 
-                    className="bg-blue-500 w-20 rounded-t-lg transition-all duration-500 hover:bg-blue-600"
+                    className="bg-blue-500 w-16 rounded-t-lg transition-all duration-500 hover:bg-blue-600"
                     style={{
-                      height: `${Math.max(40, (dashboardData.totalCustomers / Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalIncome / 1000)) * 250)}px`
+                      height: `${Math.max(40, (dashboardData.totalCustomers / Math.max(Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalSegments), dashboardData.totalIncome / 1000)) * 250)}px`
                     }}
                   ></div>
                   <div className="mt-4 text-center">
@@ -192,9 +202,9 @@ export default function Dashboard() {
 
                 <div className="flex flex-col items-center">
                   <div 
-                    className="bg-green-500 w-20 rounded-t-lg transition-all duration-500 hover:bg-green-600"
+                    className="bg-green-500 w-16 rounded-t-lg transition-all duration-500 hover:bg-green-600"
                     style={{
-                      height: `${Math.max(40, (dashboardData.activeCampaigns / Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalIncome / 1000)) * 250)}px`
+                      height: `${Math.max(40, (dashboardData.activeCampaigns / Math.max(Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalSegments), dashboardData.totalIncome / 1000)) * 250)}px`
                     }}
                   ></div>
                   <div className="mt-4 text-center">
@@ -205,9 +215,22 @@ export default function Dashboard() {
 
                 <div className="flex flex-col items-center">
                   <div 
-                    className="bg-purple-500 w-20 rounded-t-lg transition-all duration-500 hover:bg-purple-600"
+                    className="bg-orange-500 w-16 rounded-t-lg transition-all duration-500 hover:bg-orange-600"
                     style={{
-                      height: `${Math.max(40, ((dashboardData.totalIncome / 1000) / Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalIncome / 1000)) * 250)}px`
+                      height: `${Math.max(40, (dashboardData.totalSegments / Math.max(Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalSegments), dashboardData.totalIncome / 1000)) * 250)}px`
+                    }}
+                  ></div>
+                  <div className="mt-4 text-center">
+                    <div className="text-2xl font-bold text-orange-600">{dashboardData.totalSegments}</div>
+                    <div className="text-sm text-gray-600">Segments</div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div 
+                    className="bg-purple-500 w-16 rounded-t-lg transition-all duration-500 hover:bg-purple-600"
+                    style={{
+                      height: `${Math.max(40, ((dashboardData.totalIncome / 1000) / Math.max(Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalSegments), dashboardData.totalIncome / 1000)) * 250)}px`
                     }}
                   ></div>
                   <div className="mt-4 text-center">
@@ -217,7 +240,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2"></div>
                   <div className="text-sm font-medium text-gray-900">Total Customers</div>
@@ -228,6 +251,11 @@ export default function Dashboard() {
                   <div className="text-sm font-medium text-gray-900">Active Campaigns</div>
                   <div className="text-xs text-gray-600">Currently running campaigns</div>
                 </div>
+                <div className="text-center p-4 bg-orange-50 rounded-lg">
+                  <div className="w-4 h-4 bg-orange-500 rounded-full mx-auto mb-2"></div>
+                  <div className="text-sm font-medium text-gray-900">Total Segments</div>
+                  <div className="text-xs text-gray-600">Customer segmentation groups</div>
+                </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
                   <div className="w-4 h-4 bg-purple-500 rounded-full mx-auto mb-2"></div>
                   <div className="text-sm font-medium text-gray-900">Total Income</div>
@@ -236,7 +264,7 @@ export default function Dashboard() {
               </div>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
                   <div>
                     <div className="text-3xl font-bold text-blue-600">{dashboardData.totalCustomers}</div>
                     <div className="text-sm text-gray-500">Total Customers</div>
@@ -244,6 +272,10 @@ export default function Dashboard() {
                   <div>
                     <div className="text-3xl font-bold text-green-600">{dashboardData.activeCampaigns}</div>
                     <div className="text-sm text-gray-500">Active Campaigns</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-orange-600">{dashboardData.totalSegments}</div>
+                    <div className="text-sm text-gray-500">Total Segments</div>
                   </div>
                   <div>
                     <div className="text-3xl font-bold text-purple-600">${dashboardData.totalIncome.toLocaleString()}</div>
