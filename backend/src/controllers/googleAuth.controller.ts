@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 
 // Google OAuth configuration
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || process.env.CLIENT_SECRET;
+const GOOGLE_CLIENT_ID = process.env.CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mini-crm-platform-psi.vercel.app';
 
 // Generate Google OAuth URL
@@ -39,7 +39,10 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
   try {
     const { code } = req.query;
 
+    console.log('OAuth callback received:', { code: !!code });
+
     if (!code) {
+      console.error('No authorization code provided');
       res.status(400).json({
         success: false,
         error: 'Authorization code not provided'
@@ -47,24 +50,78 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
       return;
     }
 
+    // Validate required environment variables
+    if (!GOOGLE_CLIENT_ID) {
+      console.error('GOOGLE_CLIENT_ID not configured');
+      res.status(500).json({
+        success: false,
+        error: 'Server configuration error: Missing Google Client ID'
+      });
+      return;
+    }
+
+    if (!GOOGLE_CLIENT_SECRET) {
+      console.error('GOOGLE_CLIENT_SECRET not configured');
+      res.status(500).json({
+        success: false,
+        error: 'Server configuration error: Missing Google Client Secret'
+      });
+      return;
+    }
+
+    const redirectUri = `${process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com'}/api/oauth/google/callback`;
+    console.log('Exchanging code for token with redirect URI:', redirectUri);
+
     // Exchange code for access token
     const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
       client_id: GOOGLE_CLIENT_ID,
       client_secret: GOOGLE_CLIENT_SECRET,
       code: code,
       grant_type: 'authorization_code',
-      redirect_uri: `${process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com'}/api/oauth/google/callback`
+      redirect_uri: redirectUri
     });
+
+    console.log('Token exchange successful');
 
     const { access_token, id_token } = tokenResponse.data;
 
+    if (!access_token) {
+      console.error('No access token received from Google');
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get access token from Google'
+      });
+      return;
+    }
+
     // Get user info from Google
+    console.log('Fetching user info from Google');
     const userResponse = await axios.get(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`);
     const userInfo = userResponse.data;
+
+    console.log('User info received:', { id: userInfo.id, email: userInfo.email, name: userInfo.name });
+
+    if (!userInfo.id || !userInfo.email) {
+      console.error('Invalid user info from Google:', userInfo);
+      res.status(500).json({
+        success: false,
+        error: 'Invalid user information from Google'
+      });
+      return;
+    }
 
     // Create JWT token directly from Google user info (no database operations)
     const jwt = require('jsonwebtoken');
     const jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
+    
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET not configured');
+      res.status(500).json({
+        success: false,
+        error: 'Server configuration error: Missing JWT Secret'
+      });
+      return;
+    }
     
     const token = jwt.sign({
       id: userInfo.id,
@@ -75,15 +132,25 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
       provider: 'google'
     }, jwtSecret, { expiresIn: '7d' });
 
+    console.log('JWT token created successfully');
+
     // Redirect to frontend callback with token
     const redirectUrl = `${FRONTEND_URL}/auth/google/callback?token=${token}`;
+    console.log('Redirecting to frontend:', redirectUrl);
     res.redirect(redirectUrl);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Google OAuth callback error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    
     res.status(500).json({
       success: false,
-      error: 'OAuth callback failed'
+      error: 'OAuth callback failed',
+      details: error.message
     });
   }
 };

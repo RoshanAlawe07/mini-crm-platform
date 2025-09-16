@@ -207,7 +207,11 @@ app.get('/api/oauth/test', (req, res) => {
     message: 'OAuth routes are working!',
     timestamp: new Date().toISOString(),
     googleClientId: !!process.env.GOOGLE_CLIENT_ID,
-    googleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET
+    googleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+    clientId: process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID,
+    backendUrl: process.env.BACKEND_URL,
+    frontendUrl: process.env.FRONTEND_URL,
+    jwtSecret: !!process.env.JWT_SECRET
   });
 });
 
