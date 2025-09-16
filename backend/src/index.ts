@@ -6,6 +6,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import { specs, swaggerUi } from './swagger';
 
 // Load environment variables
 dotenv.config();
@@ -225,7 +226,35 @@ app.get('/api/oauth/test', (req, res) => {
   });
 });
 
-// Get current user endpoint - simple cookie-based authentication
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current authenticated user
+ *     description: Returns the current user information based on authentication cookies
+ *     tags: [Authentication]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: User information retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 app.get('/api/auth/me', (req, res) => {
   try {
     const isAuthenticated = req.cookies.isAuthenticated;
@@ -270,7 +299,34 @@ app.get('/api/auth/me', (req, res) => {
   }
 });
 
-// Logout endpoint - clears the auth cookies
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     description: Clears authentication cookies and logs out the user
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Logged out successfully
+ *       500:
+ *         description: Logout failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 app.post('/api/auth/logout', (req, res) => {
   try {
     // Clear the authentication cookies
@@ -301,7 +357,23 @@ app.post('/api/auth/logout', (req, res) => {
   }
 });
 
-// Direct Google OAuth redirect endpoint
+/**
+ * @swagger
+ * /api/oauth/google:
+ *   get:
+ *     summary: Initiate Google OAuth login
+ *     description: Redirects to Google OAuth for authentication
+ *     tags: [Authentication]
+ *     responses:
+ *       302:
+ *         description: Redirect to Google OAuth
+ *       500:
+ *         description: Error generating OAuth URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 app.get('/api/oauth/google', (req, res) => {
   try {
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;
@@ -383,7 +455,6 @@ app.get('/api/oauth/google/url', (req, res) => {
 });
 
 // Import Swagger setup
-import { setupSwagger } from './swagger';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -399,8 +470,18 @@ import vendorRoutes from './routes/vendor';
 // Import workers
 // import './workers/campaign.worker';
 
-// Setup Swagger documentation
-setupSwagger(app);
+// Swagger UI setup
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'XenoCRM API Documentation'
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(specs);
+});
 
 // API routes
 app.use('/api/auth', authRoutes);
