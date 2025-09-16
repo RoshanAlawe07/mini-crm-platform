@@ -27,27 +27,10 @@ export async function createSegment(req: Request, res: Response) {
       });
     }
 
-    // Get or create a default user
+    // Handle userId - make it optional
     let userId = createdBy;
-    if (!userId || userId === "default-user") {
-      // Try to find or create a default user
-      let defaultUser = await prisma.user.findFirst({
-        where: { email: "default@system.com" },
-      });
-
-      if (!defaultUser) {
-        defaultUser = await prisma.user.create({
-          data: {
-            email: "default@system.com",
-            name: "Default User",
-            googleId: "default-google-id",
-            password: null, // Explicitly set password as null
-          },
-        });
-        console.log("Created default user:", defaultUser.id);
-      }
-
-      userId = defaultUser.id;
+    if (userId === "default-user") {
+      userId = null; // Set to null instead of creating a default user
     }
 
     const segment = await prisma.segment.create({
@@ -55,7 +38,7 @@ export async function createSegment(req: Request, res: Response) {
         name: name.trim(),
         description: description || "",
         rulesJson: rulesJson || "{}",
-        userId: userId,
+        userId: userId || null, // Allow null userId
       },
     });
 

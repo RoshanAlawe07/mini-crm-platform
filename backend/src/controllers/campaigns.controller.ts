@@ -209,25 +209,9 @@ export async function createCampaign(req: Request, res: Response): Promise<void>
     // Get user ID from request (should be set by auth middleware)
     let userId = (req as any).user?.id || req.body.userId;
     
-    // If no userId, create or find default user
-    if (!userId) {
-      let defaultUser = await prisma.user.findFirst({
-        where: { email: 'default@system.com' }
-      });
-      
-      if (!defaultUser) {
-        defaultUser = await prisma.user.create({
-          data: {
-            email: 'default@system.com',
-            name: 'Default User',
-            googleId: 'default-google-id',
-            password: null // Explicitly set password as null
-          }
-        });
-        console.log('Created default user for campaign:', defaultUser.id);
-      }
-      
-      userId = defaultUser.id;
+    // Handle userId - make it optional
+    if (userId === 'default-user') {
+      userId = null; // Set to null instead of creating a default user
     }
     
     // Validate segmentId if provided
@@ -244,7 +228,7 @@ export async function createCampaign(req: Request, res: Response): Promise<void>
     const campaign = await prisma.campaign.create({
       data: {
         name: req.body.name,
-        userId: userId,
+        userId: userId || null, // Allow null userId
         status: req.body.status || "DRAFT",
         rulesJson: req.body.rules_json || '{}',
         segmentId: segmentId,
