@@ -134,13 +134,17 @@ export default function Customers() {
       setLoading(true);
       setError(null);
       
-      await api.delete(`/api/customers/${customerId}`);
-      console.log('Customer deleted successfully');
+      console.log('Deleting customer with ID:', customerId);
+      const response = await api.delete(`/api/customers/${customerId}`);
+      console.log('Delete response:', response);
       
+      alert('Customer deleted successfully!');
       fetchCustomers(); // Refresh the list
     } catch (err: any) {
       console.error('Error deleting customer:', err);
-      setError(err.response?.data?.error || err.message || 'Failed to delete customer');
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to delete customer';
+      setError(errorMessage);
+      alert(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

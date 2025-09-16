@@ -153,14 +153,18 @@ export default function CampaignsPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Message Content</label>
                 <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-gray-900 whitespace-pre-wrap">{selectedCampaign.message || 'No message content'}</p>
+                  <p className="text-gray-900 whitespace-pre-wrap">{selectedCampaign.messageTemplate || selectedCampaign.message || 'No message content'}</p>
                 </div>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Target Segments</label>
                 <div className="flex flex-wrap gap-2">
-                  {selectedCampaign.segments && selectedCampaign.segments.length > 0 ? (
+                  {selectedCampaign.segmentId ? (
+                    <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                      {segments.find(s => s.id === selectedCampaign.segmentId)?.name || 'Unknown Segment'}
+                    </span>
+                  ) : selectedCampaign.segments && selectedCampaign.segments.length > 0 ? (
                     selectedCampaign.segments.map((segment: any) => (
                       <span key={segment.id} className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
                         {segment.name}
