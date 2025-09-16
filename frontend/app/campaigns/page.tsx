@@ -108,7 +108,7 @@ export default function CampaignsPage() {
                 </div>
               ) : (
                 campaigns.map((campaign) => (
-                  <CampaignCard key={campaign.id} campaign={campaign} onRefresh={fetchCampaigns} />
+                  <CampaignCard key={campaign.id} campaign={campaign} onRefresh={fetchCampaigns} onView={setSelectedCampaign} />
                 ))
               )}
             </div>
@@ -298,7 +298,7 @@ function Header() {
   );
 }
 
-function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () => void }) {
+function CampaignCard({ campaign, onRefresh, onView }: { campaign: any; onRefresh: () => void; onView: (campaign: any) => void }) {
 
   const handleDelete = async () => {
     if (confirm(`Are you sure you want to delete "${campaign.name}"?`)) {
@@ -410,7 +410,7 @@ function CampaignCard({ campaign, onRefresh }: { campaign: any; onRefresh: () =>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-2">
           <button 
-            onClick={() => setSelectedCampaign(campaign)}
+            onClick={() => onView(campaign)}
             className="text-gray-600 hover:text-gray-800 text-xs sm:text-sm font-medium px-2 py-1 rounded hover:bg-gray-50"
           >
             View
