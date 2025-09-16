@@ -181,7 +181,11 @@ export default function Home() {
             </div>
             
             <div className="flex justify-center">
-              <div className="w-full max-w-[400px] sm:max-w-[500px] lg:max-w-[600px] h-[300px] sm:h-[400px] lg:h-[500px] bg-gray-200 rounded-2xl shadow-lg"></div>
+              <img 
+                src="/Login.jpg" 
+                alt="Login illustration" 
+                className="w-full max-w-[400px] sm:max-w-[500px] lg:max-w-[600px] h-[300px] sm:h-[400px] lg:h-[500px] object-cover rounded-2xl shadow-lg"
+              />
             </div>
           </div>
         </div>
@@ -189,12 +193,16 @@ export default function Home() {
 
       <section className="py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-12">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-            <div className="flex justify-center order-2 lg:order-1">
-              <div className="w-full max-w-[400px] sm:max-w-[500px] lg:max-w-[550px] h-[300px] sm:h-[400px] lg:h-[500px] bg-gray-200 rounded-2xl shadow-lg"></div>
+          <div className="flex flex-col lg:flex-row items-center justify-start gap-8 lg:gap-12">
+            <div className="flex justify-center order-2 lg:order-1 flex-shrink-0">
+              <img 
+                src="/Access.webp" 
+                alt="Access control illustration" 
+                className="w-[400px] sm:w-[500px] lg:w-[600px] h-[300px] sm:h-[400px] lg:h-[500px] object-cover rounded-2xl shadow-lg"
+              />
             </div>
             
-            <div className="space-y-4 lg:space-y-6 text-center lg:text-left order-1 lg:order-2 max-w-lg">
+            <div className="space-y-4 lg:space-y-6 text-center lg:text-right order-1 lg:order-2 max-w-lg lg:ml-[250px]">
               <h3 className="text-2xl sm:text-3xl font-extrabold text-black">
                 Access control
               </h3>
@@ -209,7 +217,7 @@ export default function Home() {
 
       <section className="py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-12">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
             <div className="space-y-4 lg:space-y-6 text-center lg:text-left order-1 max-w-lg">
               <h3 className="text-2xl sm:text-3xl font-bold text-black">
                 Quick support
@@ -220,8 +228,12 @@ export default function Home() {
               </p>
             </div>
             
-            <div className="flex justify-center order-2">
-              <div className="w-full max-w-[400px] sm:max-w-[500px] lg:max-w-[570px] h-[300px] sm:h-[400px] lg:h-[500px] bg-gray-200 rounded-2xl shadow-lg"></div>
+            <div className="flex justify-center order-2 flex-shrink-0">
+              <img 
+                src="/support.jpg" 
+                alt="Support illustration" 
+                className="w-[400px] sm:w-[500px] lg:w-[570px] h-[300px] sm:h-[400px] lg:h-[500px] object-cover rounded-2xl shadow-lg"
+              />
             </div>
           </div>
         </div>
@@ -230,29 +242,33 @@ export default function Home() {
       <section className="py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-12">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <Link href="/customers" className="w-full h-[20rem] sm:h-[25rem] lg:h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-6 sm:py-8 transition-all duration-300 hover:bg-blue-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
-              <div className="text-center space-y-2">
+            <Link href="/customers" className="w-full h-[20rem] sm:h-[25rem] lg:h-[30rem] rounded-2xl shadow-lg flex flex-col items-center justify-end py-6 sm:py-8 transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group relative overflow-hidden">
+              <img src="/Customers.jpg" alt="Customers" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
+              <div className="text-center space-y-2 relative z-10 bg-white/80 backdrop-blur-sm rounded-lg px-4 py-2">
                 <p className="text-xs sm:text-sm text-gray-500 font-normal group-hover:text-blue-600 transition-colors duration-300">Summary</p>
                 <p className="text-lg sm:text-xl font-bold text-black group-hover:text-blue-800 transition-colors duration-300">Customers</p>
               </div>
             </Link>
 
-            <Link href="/orders" className="w-full h-[20rem] sm:h-[25rem] lg:h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-6 sm:py-8 transition-all duration-300 hover:bg-green-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
-              <div className="text-center space-y-2">
+            <Link href="/orders" className="w-full h-[20rem] sm:h-[25rem] lg:h-[30rem] rounded-2xl shadow-lg flex flex-col items-center justify-end py-6 sm:py-8 transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group relative overflow-hidden">
+              <img src="/orders.jpg" alt="Orders" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
+              <div className="text-center space-y-2 relative z-10 bg-white/80 backdrop-blur-sm rounded-lg px-4 py-2">
                 <p className="text-xs sm:text-sm text-gray-500 font-normal group-hover:text-green-600 transition-colors duration-300">Insights</p>
                 <p className="text-lg sm:text-xl font-bold text-black group-hover:text-green-800 transition-colors duration-300">Orders</p>
               </div>
             </Link>
 
-            <Link href="/campaigns" className="w-full h-[20rem] sm:h-[25rem] lg:h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-6 sm:py-8 transition-all duration-300 hover:bg-purple-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
-              <div className="text-center space-y-2">
+            <Link href="/campaigns" className="w-full h-[20rem] sm:h-[25rem] lg:h-[30rem] rounded-2xl shadow-lg flex flex-col items-center justify-end py-6 sm:py-8 transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group relative overflow-hidden">
+              <img src="/campaigns.jpg" alt="Campaigns" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
+              <div className="text-center space-y-2 relative z-10 bg-white/80 backdrop-blur-sm rounded-lg px-4 py-2">
                 <p className="text-xs sm:text-sm text-gray-500 font-normal group-hover:text-purple-600 transition-colors duration-300">Automation</p>
                 <p className="text-lg sm:text-xl font-bold text-black group-hover:text-purple-800 transition-colors duration-300">Campaigns</p>
               </div>
             </Link>
 
-            <Link href="/segments" className="w-full h-[20rem] sm:h-[25rem] lg:h-[30rem] bg-gray-200 rounded-2xl shadow-lg flex flex-col items-center justify-end py-6 sm:py-8 transition-all duration-300 hover:bg-orange-100 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group">
-              <div className="text-center space-y-2">
+            <Link href="/segments" className="w-full h-[20rem] sm:h-[25rem] lg:h-[30rem] rounded-2xl shadow-lg flex flex-col items-center justify-end py-6 sm:py-8 transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer group relative overflow-hidden">
+              <img src="/segment.jpg" alt="Segments" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
+              <div className="text-center space-y-2 relative z-10 bg-white/80 backdrop-blur-sm rounded-lg px-4 py-2">
                 <p className="text-xs sm:text-sm text-gray-500 font-normal group-hover:text-orange-600 transition-colors duration-300">Segmentation</p>
                 <p className="text-lg sm:text-xl font-bold text-black group-hover:text-orange-800 transition-colors duration-300">Segments</p>
               </div>
@@ -272,7 +288,10 @@ export default function Home() {
             segmentation and<br />
             communication.
           </p>
-          <button className="bg-black text-white px-6 sm:px-8 py-2 sm:py-1 rounded-full text-base sm:text-lg font-medium hover:bg-gray-800 transition-colors">
+          <button 
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="bg-black text-white px-6 sm:px-8 py-2 sm:py-1 rounded-full text-base sm:text-lg font-medium hover:bg-gray-800 transition-colors"
+          >
             Start Now
           </button>
         </div>
