@@ -55,7 +55,7 @@ export const segmentSchema = z.object({
       return false;
     }
   }, "Invalid rules format - must be valid JSON"),
-  createdBy: z.string().min(1, "Created by is required")
+  createdBy: z.string().optional().default('default-user')
 });
 
 export const campaignSchema = z.object({

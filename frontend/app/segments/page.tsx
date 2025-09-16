@@ -542,7 +542,7 @@ function CreateSegmentPage({
       // Get user ID from localStorage
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
-      const userId = user?.id || 'default-user';
+      const userId = user?.id || user?.googleId || 'default-user';
       
       console.log('Creating segment with data:', {
         name: segmentName,
