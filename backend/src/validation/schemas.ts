@@ -46,8 +46,8 @@ export const segmentRulesSchema = rulesGroupSchema;
 export const segmentSchema = z.object({
   name: z.string().min(1, "Segment name is required"),
   description: z.string().optional(),
-  rulesJson: z.string().min(1, "Rules JSON is required"),
-  createdBy: z.string().optional().default('default-user')
+  rulesJson: z.string().optional(),
+  createdBy: z.string().optional()
 });
 
 export const campaignSchema = z.object({

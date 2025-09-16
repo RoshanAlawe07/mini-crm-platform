@@ -16,8 +16,8 @@ export async function createSegment(req: Request, res: Response) {
     const segment = await prisma.segment.create({
       data: {
         name: parsed.name,
-        description: parsed.description,
-        rulesJson: parsed.rulesJson,
+        description: parsed.description || '',
+        rulesJson: parsed.rulesJson || '{}',
         userId: parsed.createdBy || 'default-user', // Map createdBy to userId with fallback
       },
     });
@@ -37,12 +37,19 @@ export async function createSegment(req: Request, res: Response) {
       stack: error.stack
     });
     
-    res.status(400).json({
+    // More detailed error response
+    const errorResponse = {
       success: false,
       error: error.message || 'Failed to create segment',
       details: error.issues || 'Validation failed',
-      receivedData: req.body
-    });
+      receivedData: req.body,
+      errorType: error.name,
+      validationErrors: error.issues
+    };
+    
+    console.error('Sending error response:', JSON.stringify(errorResponse, null, 2));
+    
+    res.status(400).json(errorResponse);
   }
 }
 
