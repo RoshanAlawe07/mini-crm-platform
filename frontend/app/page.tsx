@@ -152,12 +152,21 @@ export default function Home() {
                 Your workspace is ready.
               </p>
               
-              <Link 
-                href="/dashboard" 
-                className="bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium mt-2.5 inline-block"
-              >
-                Continue to Dashboard
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                <Link 
+                  href="/dashboard" 
+                  className="bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium"
+                >
+                  Continue to Dashboard
+                </Link>
+                <Link 
+                  href={`${config.API_BASE_URL}/api-docs`}
+                  target="_blank"
+                  className="bg-indigo-600 text-white px-6 py-3 rounded-full hover:bg-indigo-700 transition-colors text-sm font-medium"
+                >
+                  🧪 API Testing
+                </Link>
+              </div>
             </>
           ) : (
             // Non-authenticated user content - simple Google sign in
