@@ -31,7 +31,7 @@ export const ruleFieldSchema = z.enum([
 export const singleRuleSchema = z.object({
   field: ruleFieldSchema,
   operator: ruleOperatorSchema,
-  value: z.union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))])
+  value: z.any() // More lenient validation for values
 });
 
 export const rulesGroupSchema: z.ZodType<any> = z.lazy(() => 
@@ -46,15 +46,7 @@ export const segmentRulesSchema = rulesGroupSchema;
 export const segmentSchema = z.object({
   name: z.string().min(1, "Segment name is required"),
   description: z.string().optional(),
-  rulesJson: z.string().refine((val) => {
-    try {
-      const parsed = JSON.parse(val);
-      // More lenient validation - just check if it's a valid JSON object
-      return typeof parsed === 'object' && parsed !== null;
-    } catch {
-      return false;
-    }
-  }, "Invalid rules format - must be valid JSON"),
+  rulesJson: z.string().min(1, "Rules JSON is required"),
   createdBy: z.string().optional().default('default-user')
 });
 
