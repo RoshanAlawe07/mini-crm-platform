@@ -8,7 +8,10 @@ const prisma = new PrismaClient();
 
 export async function createSegment(req: Request, res: Response) {
   try {
+    console.log('Creating segment with request body:', JSON.stringify(req.body, null, 2));
+    
     const parsed = segmentSchema.parse(req.body);
+    console.log('Parsed segment data:', JSON.stringify(parsed, null, 2));
     
     const segment = await prisma.segment.create({
       data: {
@@ -19,17 +22,19 @@ export async function createSegment(req: Request, res: Response) {
       },
     });
 
+    console.log('Segment created successfully:', segment.id);
     res.status(201).json({
       success: true,
       data: segment,
     });
   } catch (error: any) {
     console.error('Error creating segment:', error);
-    console.error('Request body:', req.body);
+    console.error('Request body:', JSON.stringify(req.body, null, 2));
     console.error('Error details:', {
       name: error.name,
       message: error.message,
-      issues: error.issues || 'No validation issues'
+      issues: error.issues || 'No validation issues',
+      stack: error.stack
     });
     
     res.status(400).json({

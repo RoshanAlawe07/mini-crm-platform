@@ -542,7 +542,14 @@ function CreateSegmentPage({
       // Get user ID from localStorage
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
-      const userId = user?.id || 'unknown-user';
+      const userId = user?.id || 'default-user';
+      
+      console.log('Creating segment with data:', {
+        name: segmentName,
+        description: description,
+        rulesJson: JSON.stringify(rulesToSave),
+        createdBy: userId
+      });
 
       await segmentsApi.create({
         name: segmentName,
@@ -553,9 +560,12 @@ function CreateSegmentPage({
 
       alert('Segment saved successfully!');
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving segment:', error);
-      alert('Error saving segment. Please try again.');
+      const errorMessage = error.response?.data?.error || error.message || 'Unknown error occurred';
+      const errorDetails = error.response?.data?.details || 'No additional details';
+      console.error('Error details:', errorDetails);
+      alert(`Error saving segment: ${errorMessage}\n\nDetails: ${errorDetails}`);
     } finally {
       setLoading(false);
     }

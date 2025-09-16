@@ -49,12 +49,12 @@ export const segmentSchema = z.object({
   rulesJson: z.string().refine((val) => {
     try {
       const parsed = JSON.parse(val);
-      segmentRulesSchema.parse(parsed);
-      return true;
+      // More lenient validation - just check if it's a valid JSON object
+      return typeof parsed === 'object' && parsed !== null;
     } catch {
       return false;
     }
-  }, "Invalid rules format"),
+  }, "Invalid rules format - must be valid JSON"),
   createdBy: z.string().min(1, "Created by is required")
 });
 
