@@ -105,7 +105,30 @@ app.use(compression());
 // Logging middleware
 app.use(morgan('combined'));
 
-// Health check endpoint
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health check endpoint
+ *     tags: [System]
+ *     responses:
+ *       200:
+ *         description: Service is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: OK
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 uptime:
+ *                   type: number
+ *                   description: Server uptime in seconds
+ */
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
@@ -230,6 +253,9 @@ app.get('/api/oauth/google/url', (req, res) => {
   }
 });
 
+// Import Swagger setup
+import { setupSwagger } from './swagger';
+
 // Import routes
 import authRoutes from './routes/auth';
 import googleAuthRoutes from './routes/googleAuth.routes';
@@ -242,6 +268,9 @@ import aiRoutes from './routes/ai.routes';
 
 // Import workers
 // import './workers/campaign.worker';
+
+// Setup Swagger documentation
+setupSwagger(app);
 
 // API routes
 app.use('/api/auth', authRoutes);
