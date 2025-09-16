@@ -230,7 +230,7 @@ export default function Customers() {
             </button>
             
             <button className="bg-black text-white px-2 sm:px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-xs sm:text-sm">
-              Logout
+              Sign Out
             </button>
           </div>
         </div>

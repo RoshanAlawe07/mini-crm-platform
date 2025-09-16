@@ -16,8 +16,8 @@ export default function SignIn() {
     try {
       await signInWithGoogle();
     } catch (error) {
-      console.error('Google sign in error:', error);
-      alert('Failed to sign in with Google. Please try again.');
+      console.error('Google sign up error:', error);
+      alert('Failed to sign up with Google. Please try again.');
     }
   };
 
@@ -49,11 +49,11 @@ export default function SignIn() {
                 </svg>
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-            <p className="text-gray-600">Sign in to your account</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome to XenoCRM</h2>
+            <p className="text-gray-600">Sign up to get started</p>
           </div>
 
-          {/* Google Sign In Button */}
+          {/* Google Sign Up Button */}
           <button
             onClick={handleGoogleSignIn}
             className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors mb-6"
@@ -64,7 +64,7 @@ export default function SignIn() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Continue with Google
+            Sign Up with Google
           </button>
 
           {/* Divider */}
@@ -134,7 +134,7 @@ export default function SignIn() {
               disabled={isSubmitting}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Signing In...' : 'Sign In'}
+              {isSubmitting ? 'Signing Up...' : 'Sign Up'}
             </button>
           </form>
 

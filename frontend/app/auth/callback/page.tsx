@@ -33,7 +33,7 @@ export default function Callback() {
             }, 3000);
           } else {
             setStatus('error');
-            setMessage('Authentication failed. Redirecting to sign in...');
+            setMessage('Authentication failed. Redirecting to sign up...');
             setTimeout(() => {
               router.push("/signin");
             }, 2000);
@@ -42,7 +42,7 @@ export default function Callback() {
       } catch (error) {
         console.error('Callback error:', error);
         setStatus('error');
-        setMessage('An error occurred. Redirecting to sign in...');
+        setMessage('An error occurred. Redirecting to sign up...');
         setTimeout(() => {
           router.push("/signin");
         }, 2000);
