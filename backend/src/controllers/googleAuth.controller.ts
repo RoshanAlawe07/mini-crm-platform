@@ -157,14 +157,8 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
 
     console.log('JWT token created successfully');
 
-    // Redirect to frontend with token and user info
-    const redirectUrl = `${FRONTEND_URL}/auth/google/callback?token=${encodeURIComponent(token)}&success=true&user=${encodeURIComponent(JSON.stringify({
-      id: userInfo.id,
-      email: userInfo.email,
-      name: userInfo.name,
-      picture: userInfo.picture,
-      googleId: userInfo.id
-    }))}`;
+    // Redirect to frontend with token (as per specification)
+    const redirectUrl = `${FRONTEND_URL}/auth/callback?token=${encodeURIComponent(token)}`;
     console.log('Redirecting to frontend:', redirectUrl);
     res.redirect(redirectUrl);
 
@@ -173,13 +167,24 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
     console.error('Error details:', {
       message: error.message,
       response: error.response?.data,
-      status: error.response?.status
+      status: error.response?.status,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.config?.data
+      }
     });
+    
+    // Return more detailed error information
+    const errorMessage = error.response?.data?.error || error.message;
+    const errorDescription = error.response?.data?.error_description || 'Unknown error';
     
     res.status(500).json({
       success: false,
       error: 'OAuth callback failed',
-      details: error.message
+      details: errorMessage,
+      description: errorDescription,
+      status: error.response?.status
     });
   }
 };

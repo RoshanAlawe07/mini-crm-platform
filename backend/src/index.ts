@@ -203,19 +203,62 @@ app.get('/cors-test', (req, res) => {
 
 // Test OAuth endpoint
 app.get('/api/oauth/test', (req, res) => {
+  const redirectUri = `${process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com'}/api/oauth/google/callback`;
+  
   res.json({
     message: 'OAuth routes are working!',
     timestamp: new Date().toISOString(),
+    clientId: !!process.env.CLIENT_ID,
+    clientSecret: !!process.env.CLIENT_SECRET,
     googleClientId: !!process.env.GOOGLE_CLIENT_ID,
     googleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
-    clientId: process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID,
+    clientIdValue: process.env.CLIENT_ID,
+    googleClientIdValue: process.env.GOOGLE_CLIENT_ID,
     backendUrl: process.env.BACKEND_URL,
     frontendUrl: process.env.FRONTEND_URL,
+    redirectUri: redirectUri,
     jwtSecret: !!process.env.JWT_SECRET
   });
 });
 
-// Google OAuth endpoints
+// Direct Google OAuth redirect endpoint
+app.get('/api/oauth/google', (req, res) => {
+  try {
+    const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;
+    const BACKEND_URL = (process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com').trim();
+    const redirectUri = `${BACKEND_URL}/api/oauth/google/callback`;
+    
+    // Debug logging
+    console.log('🔍 Direct OAuth Debug Info:');
+    console.log('BACKEND_URL:', JSON.stringify(BACKEND_URL));
+    console.log('redirectUri:', JSON.stringify(redirectUri));
+    console.log('GOOGLE_CLIENT_ID:', !!GOOGLE_CLIENT_ID);
+    
+    // Use more specific scopes and remove problematic parameters
+    const scope = 'email profile';
+    const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${GOOGLE_CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=code&` +
+      `scope=${encodeURIComponent(scope)}&` +
+      `state=${state}&` +
+      `access_type=online&` +
+      `include_granted_scopes=true`;
+
+    console.log('Redirecting to Google OAuth:', authUrl);
+    res.redirect(authUrl);
+  } catch (error) {
+    console.error('Error generating Google auth URL:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate Google auth URL'
+    });
+  }
+});
+
+// Google OAuth URL endpoint (for JSON response)
 app.get('/api/oauth/google/url', (req, res) => {
   try {
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;

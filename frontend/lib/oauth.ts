@@ -56,8 +56,8 @@ export const verifyToken = async (token: string): Promise<AuthResponse> => {
 // Sign in with Google
 export const signInWithGoogle = async (): Promise<void> => {
   try {
-    const authUrl = await getGoogleAuthUrl();
-    window.location.href = authUrl;
+    // Direct redirect to backend OAuth endpoint as specified
+    window.location.href = "https://mini-crm-platform-tnsk.onrender.com/api/oauth/google";
   } catch (error) {
     console.error('Error signing in with Google:', error);
     throw error;
