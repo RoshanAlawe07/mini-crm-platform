@@ -13,7 +13,17 @@ export default function Home() {
 
   useEffect(() => {
     // Check authentication status
-    setIsAuth(isAuthenticated());
+    const checkAuth = async () => {
+      try {
+        const authStatus = await isAuthenticated();
+        setIsAuth(authStatus);
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        setIsAuth(false);
+      }
+    };
+    
+    checkAuth();
   }, []);
 
   return (
