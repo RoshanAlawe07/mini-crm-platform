@@ -37,6 +37,15 @@ export const getGoogleAuthUrl = (req: Request, res: Response): void => {
 // Handle Google OAuth callback
 export const handleGoogleCallback = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Check if user is already authenticated
+    const existingToken = req.cookies.authToken;
+    if (existingToken) {
+      console.log('User already has authentication token, redirecting to frontend');
+      const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mini-crm-platform-psi.vercel.app';
+      const redirectUrl = `${FRONTEND_URL}/auth/callback?success=true`;
+      return res.redirect(redirectUrl);
+    }
+    
     const { code } = req.query;
 
     console.log('OAuth callback received:', { code: !!code });
@@ -143,44 +152,54 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
     }
 
     // Create JWT token directly from Google user info (no database operations)
-    const jwt = require('jsonwebtoken');
-    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
-    
-    if (!process.env.JWT_SECRET) {
-      console.error('JWT_SECRET not configured');
+    try {
+      const jwt = require('jsonwebtoken');
+      const jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
+      
+      if (!process.env.JWT_SECRET) {
+        console.error('JWT_SECRET not configured');
+        res.status(500).json({
+          success: false,
+          error: 'Server configuration error: Missing JWT Secret'
+        });
+        return;
+      }
+      
+      const token = jwt.sign({
+        id: userInfo.id,
+        email: userInfo.email,
+        name: userInfo.name,
+        picture: userInfo.picture,
+        googleId: userInfo.id,
+        provider: 'google'
+      }, jwtSecret, { expiresIn: '7d' });
+
+      console.log('JWT token created successfully');
+
+      // Set secure HTTP-only cookie with JWT token
+      res.cookie('authToken', token, {
+        httpOnly: true,           // Can't be accessed from JavaScript (XSS protection)
+        secure: process.env.NODE_ENV === 'production', // Only over HTTPS in production
+        sameSite: 'lax',          // CSRF protection
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        path: '/'                 // Available site-wide
+      });
+
+      console.log('Set HTTP-only cookie with JWT token');
+      
+      // Redirect to frontend success page
+      const redirectUrl = `${FRONTEND_URL}/auth/callback?success=true`;
+      console.log('Redirecting to frontend:', redirectUrl);
+      res.redirect(redirectUrl);
+    } catch (jwtError: any) {
+      console.error('JWT creation error:', jwtError);
       res.status(500).json({
         success: false,
-        error: 'Server configuration error: Missing JWT Secret'
+        error: 'Failed to create authentication token',
+        details: jwtError.message
       });
       return;
     }
-    
-    const token = jwt.sign({
-      id: userInfo.id,
-      email: userInfo.email,
-      name: userInfo.name,
-      picture: userInfo.picture,
-      googleId: userInfo.id,
-      provider: 'google'
-    }, jwtSecret, { expiresIn: '7d' });
-
-    console.log('JWT token created successfully');
-
-    // Set secure HTTP-only cookie with JWT token
-    res.cookie('authToken', token, {
-      httpOnly: true,           // Can't be accessed from JavaScript (XSS protection)
-      secure: process.env.NODE_ENV === 'production', // Only over HTTPS in production
-      sameSite: 'lax',          // CSRF protection
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-      path: '/'                 // Available site-wide
-    });
-
-    console.log('Set HTTP-only cookie with JWT token');
-    
-    // Redirect to frontend success page
-    const redirectUrl = `${FRONTEND_URL}/auth/callback?success=true`;
-    console.log('Redirecting to frontend:', redirectUrl);
-    res.redirect(redirectUrl);
 
   } catch (error: any) {
     console.error('Google OAuth callback error:', error);
