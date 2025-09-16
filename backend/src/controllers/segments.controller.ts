@@ -26,8 +26,7 @@ export async function createSegment(req: Request, res: Response) {
           data: {
             email: 'default@system.com',
             name: 'Default User',
-            googleId: 'default-google-id',
-            provider: 'system'
+            googleId: 'default-google-id'
           }
         });
         console.log('Created default user:', defaultUser.id);

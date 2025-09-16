@@ -207,14 +207,26 @@ async function simulateMessageSending(campaignId: string, customerIds: string[],
 export async function createCampaign(req: Request, res: Response): Promise<void> {
   try {
     // Get user ID from request (should be set by auth middleware)
-    const userId = (req as any).user?.id || req.body.userId;
+    let userId = (req as any).user?.id || req.body.userId;
     
+    // If no userId, create or find default user
     if (!userId) {
-      res.status(400).json({
-        success: false,
-        error: 'User ID is required to create a campaign'
+      let defaultUser = await prisma.user.findFirst({
+        where: { email: 'default@system.com' }
       });
-      return;
+      
+      if (!defaultUser) {
+        defaultUser = await prisma.user.create({
+          data: {
+            email: 'default@system.com',
+            name: 'Default User',
+            googleId: 'default-google-id'
+          }
+        });
+        console.log('Created default user for campaign:', defaultUser.id);
+      }
+      
+      userId = defaultUser.id;
     }
     
     // Validate segmentId if provided
