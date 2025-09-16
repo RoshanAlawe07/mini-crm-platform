@@ -8,15 +8,12 @@ import { isAuthenticated } from '../lib/oauth';
 export default function Home() {
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuth, setIsAuth] = useState(false);
 
   useEffect(() => {
-    // Check if user is already authenticated
-    if (isAuthenticated()) {
-      router.push('/dashboard');
-    } else {
-      router.push('/signin');
-    }
-  }, [router]);
+    // Check authentication status
+    setIsAuth(isAuthenticated());
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -54,16 +51,26 @@ export default function Home() {
               </svg>
             </button>
             
-            <button 
-              onClick={() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                router.push('/signin');
-              }}
-              className="bg-black text-white px-2 sm:px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-xs sm:text-sm" 
-            >
-              Sign Out
-            </button>
+            {isAuth ? (
+              <button 
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('user');
+                  setIsAuth(false);
+                  router.push('/');
+                }}
+                className="bg-black text-white px-2 sm:px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-xs sm:text-sm" 
+              >
+                Sign Out
+              </button>
+            ) : (
+              <Link 
+                href="/signin"
+                className="bg-black text-white px-2 sm:px-3 py-1.5 rounded-2xl hover:bg-gray-800 transition-colors text-xs sm:text-sm" 
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
 
@@ -113,16 +120,49 @@ export default function Home() {
 
       <main className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 sm:px-6 lg:px-12">
         <div className="text-center max-w-4xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-black -mb-2 font-inter leading-tight">
-            Welcome to XenoCRM.
-          </h2>
-          <p className="text-2xl sm:text-3xl lg:text-5xl text-gray-500 mb-6 font-inter leading-tight font-bold">
-            Sign in to your workspace.
-          </p>
-          
-          <button className="bg-black text-white px-3 py-1.5 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium mt-2.5">
-           XenoCRM
-          </button>
+          {isAuth ? (
+            // Authenticated user content
+            <>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-black -mb-2 font-inter leading-tight">
+                Welcome back to XenoCRM.
+              </h2>
+              <p className="text-2xl sm:text-3xl lg:text-5xl text-gray-500 mb-6 font-inter leading-tight font-bold">
+                Your CRM workspace is ready.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                <Link 
+                  href="/dashboard" 
+                  className="bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium"
+                >
+                  Go to Dashboard
+                </Link>
+                <Link 
+                  href="/customers" 
+                  className="bg-gray-100 text-black px-6 py-3 rounded-full hover:bg-gray-200 transition-colors text-sm font-medium"
+                >
+                  Manage Customers
+                </Link>
+              </div>
+            </>
+          ) : (
+            // Non-authenticated user content
+            <>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-black -mb-2 font-inter leading-tight">
+                Welcome to XenoCRM.
+              </h2>
+              <p className="text-2xl sm:text-3xl lg:text-5xl text-gray-500 mb-6 font-inter leading-tight font-bold">
+                Sign in to your workspace.
+              </p>
+              
+              <Link 
+                href="/signin" 
+                className="bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium mt-2.5 inline-block"
+              >
+                Sign In
+              </Link>
+            </>
+          )}
         </div>
       </main>
 

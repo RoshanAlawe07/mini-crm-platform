@@ -48,11 +48,11 @@ function CallbackInner() {
           localStorage.setItem('user', JSON.stringify(result.user));
           
           setStatus('success');
-          setMessage('Successfully signed in! Redirecting to dashboard...');
+          setMessage('Successfully signed in! Redirecting to home...');
           
-          // Redirect to dashboard after a short delay
+          // Redirect to home page after a short delay
           setTimeout(() => {
-            router.push('/dashboard');
+            router.push('/');
           }, 2000);
         } else {
           setStatus('error');
