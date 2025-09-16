@@ -72,13 +72,36 @@ export const handleGoogleCallback = async (req: Request, res: Response): Promise
     const redirectUri = `${process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com'}/api/oauth/google/callback`;
     console.log('Exchanging code for token with redirect URI:', redirectUri);
 
-    // Exchange code for access token
-    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+    // Prepare token exchange request
+    const tokenRequest = {
       client_id: GOOGLE_CLIENT_ID,
       client_secret: GOOGLE_CLIENT_SECRET,
       code: code,
       grant_type: 'authorization_code',
       redirect_uri: redirectUri
+    };
+
+    console.log('Token request data:', {
+      client_id: GOOGLE_CLIENT_ID,
+      client_secret: '***HIDDEN***',
+      code: code,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri
+    });
+
+    // Exchange code for access token (Google expects form-encoded data)
+    const formData = new URLSearchParams();
+    formData.append('client_id', GOOGLE_CLIENT_ID);
+    formData.append('client_secret', GOOGLE_CLIENT_SECRET);
+    formData.append('code', code as string);
+    formData.append('grant_type', 'authorization_code');
+    formData.append('redirect_uri', redirectUri);
+
+    console.log('Sending form data to Google...');
+    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', formData, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     });
 
     console.log('Token exchange successful');
