@@ -220,7 +220,8 @@ export async function createCampaign(req: Request, res: Response): Promise<void>
           data: {
             email: 'default@system.com',
             name: 'Default User',
-            googleId: 'default-google-id'
+            googleId: 'default-google-id',
+            password: null // Explicitly set password as null
           }
         });
         console.log('Created default user for campaign:', defaultUser.id);

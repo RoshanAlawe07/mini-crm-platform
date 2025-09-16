@@ -16,7 +16,7 @@ model User {
   googleId  String?  @unique
   email     String   @unique
   name      String
-  password  String?  // For email/password authentication
+  password  String?  // For email/password authentication - nullable
   picture   String?
   role      String   @default("USER")
   isActive  Boolean  @default(true)
