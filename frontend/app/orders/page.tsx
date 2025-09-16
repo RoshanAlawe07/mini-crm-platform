@@ -43,8 +43,7 @@ export default function Orders() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newOrder, setNewOrder] = useState({
     customerName: '',
-    amount: '',
-    status: 'PENDING'
+    amount: ''
   });
   const [customers, setCustomers] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -117,8 +116,7 @@ export default function Orders() {
       
       const orderData = {
         customerId: customer.id,
-        amount: parseFloat(newOrder.amount),
-        status: newOrder.status
+        amount: parseFloat(newOrder.amount)
       };
       
       console.log('Sending order data:', orderData);
@@ -128,7 +126,7 @@ export default function Orders() {
       const response = await api.post('/api/orders', orderData);
       console.log('Order added successfully:', response.data);
       
-      setNewOrder({ customerName: '', amount: '', status: 'PENDING' });
+      setNewOrder({ customerName: '', amount: '' });
       setShowAddForm(false);
       
       // Refresh the orders list immediately
@@ -394,17 +392,6 @@ export default function Orders() {
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-900">
                               <div className="flex items-center gap-2">
-                                <button className="text-gray-600 hover:text-gray-900 transition-colors" title="View">
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                  </svg>
-                                </button>
-                                <button className="text-gray-600 hover:text-gray-900 transition-colors" title="Edit">
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                  </svg>
-                                </button>
                                 <button 
                                   onClick={() => handleDeleteOrder(order.id)}
                                   className="text-gray-600 hover:text-red-600 transition-colors" 
@@ -412,10 +399,10 @@ export default function Orders() {
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </td>
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
                           </tr>
                         ))
                       )}
@@ -510,20 +497,6 @@ export default function Orders() {
                   value={newOrder.amount}
                   onChange={(e) => setNewOrder(prev => ({ ...prev, amount: e.target.value }))}
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                  value={newOrder.status}
-                  onChange={(e) => setNewOrder(prev => ({ ...prev, status: e.target.value }))}
-                >
-                  <option value="PENDING">Pending</option>
-                  <option value="PROCESSING">Processing</option>
-                  <option value="SHIPPED">Shipped</option>
-                  <option value="DELIVERED">Delivered</option>
-                  <option value="CANCELLED">Cancelled</option>
-                </select>
               </div>
               <div className="flex gap-3 pt-4">
                 <button

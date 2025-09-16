@@ -189,96 +189,100 @@ export default function Dashboard() {
               <div className="h-80 flex items-end justify-center space-x-6">
                 <div className="flex flex-col items-center">
                   <div 
-                    className="bg-blue-500 w-16 rounded-t-lg transition-all duration-500 hover:bg-blue-600"
+                    className="w-16 rounded-t-lg transition-all duration-500 hover:opacity-80"
                     style={{
+                      backgroundColor: '#edafb8',
                       height: `${Math.max(40, (dashboardData.totalCustomers / Math.max(Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalSegments), dashboardData.totalIncome / 1000)) * 250)}px`
                     }}
                   ></div>
                   <div className="mt-4 text-center">
-                    <div className="text-2xl font-bold text-blue-600">{dashboardData.totalCustomers}</div>
+                    <div className="text-2xl font-bold text-black">{dashboardData.totalCustomers}</div>
                     <div className="text-sm text-gray-600">Customers</div>
                   </div>
                 </div>
 
                 <div className="flex flex-col items-center">
                   <div 
-                    className="bg-green-500 w-16 rounded-t-lg transition-all duration-500 hover:bg-green-600"
+                    className="w-16 rounded-t-lg transition-all duration-500 hover:opacity-80"
                     style={{
+                      backgroundColor: '#f7e1d7',
                       height: `${Math.max(40, (dashboardData.activeCampaigns / Math.max(Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalSegments), dashboardData.totalIncome / 1000)) * 250)}px`
                     }}
                   ></div>
                   <div className="mt-4 text-center">
-                    <div className="text-2xl font-bold text-green-600">{dashboardData.activeCampaigns}</div>
+                    <div className="text-2xl font-bold text-black">{dashboardData.activeCampaigns}</div>
                     <div className="text-sm text-gray-600">Campaigns</div>
                   </div>
                 </div>
 
                 <div className="flex flex-col items-center">
                   <div 
-                    className="bg-orange-500 w-16 rounded-t-lg transition-all duration-500 hover:bg-orange-600"
+                    className="w-16 rounded-t-lg transition-all duration-500 hover:opacity-80"
                     style={{
+                      backgroundColor: '#dedbd2',
                       height: `${Math.max(40, (dashboardData.totalSegments / Math.max(Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalSegments), dashboardData.totalIncome / 1000)) * 250)}px`
                     }}
                   ></div>
                   <div className="mt-4 text-center">
-                    <div className="text-2xl font-bold text-orange-600">{dashboardData.totalSegments}</div>
+                    <div className="text-2xl font-bold text-black">{dashboardData.totalSegments}</div>
                     <div className="text-sm text-gray-600">Segments</div>
                   </div>
                 </div>
 
                 <div className="flex flex-col items-center">
                   <div 
-                    className="bg-purple-500 w-16 rounded-t-lg transition-all duration-500 hover:bg-purple-600"
+                    className="w-16 rounded-t-lg transition-all duration-500 hover:opacity-80"
                     style={{
+                      backgroundColor: '#b0c4b1',
                       height: `${Math.max(40, ((dashboardData.totalIncome / 1000) / Math.max(Math.max(Math.max(dashboardData.totalCustomers, dashboardData.activeCampaigns), dashboardData.totalSegments), dashboardData.totalIncome / 1000)) * 250)}px`
                     }}
                   ></div>
                   <div className="mt-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600">${(dashboardData.totalIncome / 1000).toFixed(0)}K</div>
+                    <div className="text-2xl font-bold text-black">${(dashboardData.totalIncome / 1000).toFixed(0)}K</div>
                     <div className="text-sm text-gray-600">Income</div>
                   </div>
                 </div>
               </div>
 
               <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2"></div>
-                  <div className="text-sm font-medium text-gray-900">Total Customers</div>
-                  <div className="text-xs text-gray-600">Registered users in system</div>
+                <div className="text-center p-4 rounded-lg border-2" style={{ backgroundColor: '#edafb8', borderColor: '#edafb8' }}>
+                  <div className="w-4 h-4 rounded-full mx-auto mb-2" style={{ backgroundColor: '#edafb8' }}></div>
+                  <div className="text-sm font-bold text-gray-900">Total Customers</div>
+                  <div className="text-xs font-medium text-gray-700">Registered users in system</div>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="w-4 h-4 bg-green-500 rounded-full mx-auto mb-2"></div>
-                  <div className="text-sm font-medium text-gray-900">Active Campaigns</div>
-                  <div className="text-xs text-gray-600">Currently running campaigns</div>
+                <div className="text-center p-4 rounded-lg border-2" style={{ backgroundColor: '#f7e1d7', borderColor: '#f7e1d7' }}>
+                  <div className="w-4 h-4 rounded-full mx-auto mb-2" style={{ backgroundColor: '#f7e1d7' }}></div>
+                  <div className="text-sm font-bold text-gray-900">Active Campaigns</div>
+                  <div className="text-xs font-medium text-gray-700">Currently running campaigns</div>
                 </div>
-                <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <div className="w-4 h-4 bg-orange-500 rounded-full mx-auto mb-2"></div>
-                  <div className="text-sm font-medium text-gray-900">Total Segments</div>
-                  <div className="text-xs text-gray-600">Customer segmentation groups</div>
+                <div className="text-center p-4 rounded-lg border-2" style={{ backgroundColor: '#dedbd2', borderColor: '#dedbd2' }}>
+                  <div className="w-4 h-4 rounded-full mx-auto mb-2" style={{ backgroundColor: '#dedbd2' }}></div>
+                  <div className="text-sm font-bold text-gray-900">Total Segments</div>
+                  <div className="text-xs font-medium text-gray-700">Customer segmentation groups</div>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="w-4 h-4 bg-purple-500 rounded-full mx-auto mb-2"></div>
-                  <div className="text-sm font-medium text-gray-900">Total Income</div>
-                  <div className="text-xs text-gray-600">Revenue from all orders</div>
+                <div className="text-center p-4 rounded-lg border-2" style={{ backgroundColor: '#b0c4b1', borderColor: '#b0c4b1' }}>
+                  <div className="w-4 h-4 rounded-full mx-auto mb-2" style={{ backgroundColor: '#b0c4b1' }}></div>
+                  <div className="text-sm font-bold text-gray-900">Total Income</div>
+                  <div className="text-xs font-medium text-gray-700">Revenue from all orders</div>
                 </div>
               </div>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
                   <div>
-                    <div className="text-3xl font-bold text-blue-600">{dashboardData.totalCustomers}</div>
+                    <div className="text-3xl font-bold text-black">{dashboardData.totalCustomers}</div>
                     <div className="text-sm text-gray-500">Total Customers</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-green-600">{dashboardData.activeCampaigns}</div>
+                    <div className="text-3xl font-bold text-black">{dashboardData.activeCampaigns}</div>
                     <div className="text-sm text-gray-500">Active Campaigns</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-orange-600">{dashboardData.totalSegments}</div>
+                    <div className="text-3xl font-bold text-black">{dashboardData.totalSegments}</div>
                     <div className="text-sm text-gray-500">Total Segments</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-purple-600">${dashboardData.totalIncome.toLocaleString()}</div>
+                    <div className="text-3xl font-bold text-black">${dashboardData.totalIncome.toLocaleString()}</div>
                     <div className="text-sm text-gray-500">Total Income</div>
                   </div>
                 </div>
