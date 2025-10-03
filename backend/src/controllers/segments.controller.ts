@@ -4,92 +4,60 @@ import {
   aiHelperSchema,
   previewAudienceSchema,
 } from "../validation/schemas";
-import { PrismaClient } from "@prisma/client";
-import { RulesEngine } from "../services/rulesEngine.service";
-import { SqlEvaluator } from "../services/sqlEvaluator.service";
+import { PrismaClient } from '@prisma/client';
+import { SqlEvaluator } from '../services/sqlEvaluator.service';
 
 const prisma = new PrismaClient();
 
 export async function createSegment(req: Request, res: Response): Promise<void> {
   try {
-    console.log(
-      "Creating segment with request body:",
-      JSON.stringify(req.body, null, 2),
-    );
+    const { name, description, rules, rulesJson } = req.body;
+    const userId = (req as any).user?.id;
 
-    // Bypass validation completely and use request body directly
-    const { name, description, rulesJson, createdBy } = req.body;
+    const validation = segmentSchema.safeParse({
+      name,
+      description,
+      rulesJson: rulesJson || "{}",
+    });
 
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
+    if (!validation.success) {
       res.status(400).json({
         success: false,
-        error: "Segment name is required",
+        error: "Invalid input data",
+        details: validation.error.issues,
       });
       return;
     }
 
-    // Handle userId - make it optional
-    let userId = createdBy;
-    if (userId === "default-user") {
-      userId = null; // Set to null instead of creating a default user
-    }
-
     const segment = await prisma.segment.create({
       data: {
-        name: name.trim(),
+        name,
         description: description || "",
         rulesJson: rulesJson || "{}",
-        userId: userId || null, // Allow null userId
+        userId: userId || null,
       },
     });
 
-    console.log("Segment created successfully:", segment.id);
+    console.log(`Segment created: ${segment.id} - ${segment.name}`);
+
     res.status(201).json({
       success: true,
       data: segment,
     });
   } catch (error: any) {
     console.error("Error creating segment:", error);
-    console.error("Request body:", JSON.stringify(req.body, null, 2));
-    console.error("Error details:", {
-      name: error.name,
-      message: error.message,
-      issues: error.issues || "No validation issues",
-      stack: error.stack,
-    });
-
-    // More detailed error response
-    const errorResponse = {
+    res.status(500).json({
       success: false,
-      error: error.message || "Failed to create segment",
-      details: error.issues || "Validation failed",
-      receivedData: req.body,
-      errorType: error.name,
-      validationErrors: error.issues,
-    };
-
-    console.error(
-      "Sending error response:",
-      JSON.stringify(errorResponse, null, 2),
-    );
-
-    res.status(400).json(errorResponse);
+      error: "Failed to create segment",
+      details: error.message,
+    });
   }
 }
 
 export async function getAllSegments(req: Request, res: Response): Promise<void> {
   try {
     const segments = await prisma.segment.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        campaigns: {
-          select: {
-            id: true,
-            name: true,
-            createdAt: true,
-          },
-        },
-      },
+      orderBy: { createdAt: 'desc' },
     });
 
     res.json({
@@ -101,6 +69,7 @@ export async function getAllSegments(req: Request, res: Response): Promise<void>
     res.status(500).json({
       success: false,
       error: "Failed to fetch segments",
+      details: error.message,
     });
   }
 }
@@ -114,15 +83,6 @@ export async function getSegmentById(
 
     const segment = await prisma.segment.findUnique({
       where: { id },
-      include: {
-        campaigns: {
-          select: {
-            id: true,
-            name: true,
-            createdAt: true,
-          },
-        },
-      },
     });
 
     if (!segment) {
@@ -142,6 +102,7 @@ export async function getSegmentById(
     res.status(500).json({
       success: false,
       error: "Failed to fetch segment",
+      details: error.message,
     });
   }
 }
@@ -152,15 +113,14 @@ export async function updateSegment(
 ): Promise<void> {
   try {
     const { id } = req.params;
-    const parsed = segmentSchema.parse(req.body);
+    const { name, description, rulesJson } = req.body;
 
     const segment = await prisma.segment.update({
       where: { id },
       data: {
-        name: parsed.name,
-        description: parsed.description,
-        rulesJson: parsed.rulesJson,
-        updatedAt: new Date(),
+        name,
+        description,
+        rulesJson: rulesJson || "{}",
       },
     });
 
@@ -170,16 +130,10 @@ export async function updateSegment(
     });
   } catch (error: any) {
     console.error("Error updating segment:", error);
-    if (error.code === "P2025") {
-      res.status(404).json({
-        success: false,
-        error: "Segment not found",
-      });
-      return;
-    }
-    res.status(400).json({
+    res.status(500).json({
       success: false,
-      error: error.message || "Failed to update segment",
+      error: "Failed to update segment",
+      details: error.message,
     });
   }
 }
@@ -201,16 +155,10 @@ export async function deleteSegment(
     });
   } catch (error: any) {
     console.error("Error deleting segment:", error);
-    if (error.code === "P2025") {
-      res.status(404).json({
-        success: false,
-        error: "Segment not found",
-      });
-      return;
-    }
     res.status(500).json({
       success: false,
       error: "Failed to delete segment",
+      details: error.message,
     });
   }
 }
@@ -221,7 +169,6 @@ export async function getSegmentCustomers(
 ): Promise<void> {
   try {
     const { id } = req.params;
-    const { page = 1, limit = 10 } = req.query;
 
     const segment = await prisma.segment.findUnique({
       where: { id },
@@ -235,26 +182,21 @@ export async function getSegmentCustomers(
       return;
     }
 
-    // Parse the rules
-    const rules = JSON.parse(segment!.rulesJson);
+    const rules = JSON.parse(segment.rulesJson || "{}");
+    const sqlQuery = SqlEvaluator.rulesToSqlString(rules);
 
-    // Use SQL evaluator for better performance
-    const result = await SqlEvaluator.getAudience(
-      prisma,
-      rules,
-      Number(page),
-      Number(limit),
-    );
+    const customers = await prisma.$queryRawUnsafe(sqlQuery);
 
     res.json({
       success: true,
-      data: result,
+      data: customers,
     });
   } catch (error: any) {
     console.error("Error fetching segment customers:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch segment customers",
+      details: error.message,
     });
   }
 }
@@ -263,69 +205,73 @@ export async function validateRules(req: Request, res: Response): Promise<void> 
   try {
     const { rules } = req.body;
 
-    const validation = RulesEngine.validateRules(rules);
-
-    res.json({
-      success: true,
-      data: validation,
-    });
-  } catch (error: any) {
-    console.error("Error validating rules:", error);
-    res.status(400).json({
-      success: false,
-      error: "Failed to validate rules",
-    });
-  }
-}
-
-export async function getAudienceCount(
-  req: Request,
-  res: Response,
-): Promise<void> {
-  try {
-    const { rules } = req.body;
-
-    // Validate rules first
-    const validation = SqlEvaluator.validateRulesForSql(rules);
-    if (!validation.isValid) {
+    if (!rules) {
       res.status(400).json({
         success: false,
-        error: validation.error || "Invalid rules format",
+        error: "Rules are required",
       });
       return;
     }
 
-    const count = await SqlEvaluator.getAudienceCount(prisma, rules);
+    const validation = SqlEvaluator.validateRulesForSql(rules);
+    const isValid = validation.isValid;
 
     res.json({
       success: true,
-      data: {
-        count,
-        rules,
-      },
+      valid: isValid,
+      error: validation.error,
+    });
+  } catch (error: any) {
+    console.error("Error validating rules:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to validate rules",
+      details: error.message,
+    });
+  }
+}
+
+export async function getAudienceCount(req: Request, res: Response): Promise<void> {
+  try {
+    const { rulesJson } = req.body;
+
+    if (!rulesJson) {
+      res.status(400).json({
+        success: false,
+        error: "Rules JSON is required",
+      });
+      return;
+    }
+
+    const rules = JSON.parse(rulesJson);
+    const sqlQuery = SqlEvaluator.rulesToSqlString(rules);
+    const countQuery = `SELECT COUNT(*) as count FROM (${sqlQuery}) as subquery`;
+
+    const result = await prisma.$queryRawUnsafe(countQuery);
+    const count = (result as any)[0]?.count || 0;
+
+    res.json({
+      success: true,
+      count: parseInt(count),
     });
   } catch (error: any) {
     console.error("Error getting audience count:", error);
     res.status(500).json({
       success: false,
       error: "Failed to get audience count",
+      details: error.message,
     });
   }
 }
 
-export async function generateSqlQuery(
-  req: Request,
-  res: Response,
-): Promise<void> {
+export async function generateSqlQuery(req: Request, res: Response): Promise<void> {
   try {
     const { rules } = req.body;
 
-    // Validate rules first
-    const validation = SqlEvaluator.validateRulesForSql(rules);
-    if (!validation.isValid) {
+    if (!rules) {
       res.status(400).json({
         success: false,
-        error: validation.error || "Invalid rules format",
+        error: "Rules are required",
       });
       return;
     }
@@ -334,76 +280,78 @@ export async function generateSqlQuery(
 
     res.json({
       success: true,
-      data: {
-        sql: `SELECT * FROM customers WHERE ${sqlQuery}`,
-        countSql: `SELECT COUNT(*) FROM customers WHERE ${sqlQuery}`,
-        rules,
-      },
+      sqlQuery,
     });
   } catch (error: any) {
     console.error("Error generating SQL query:", error);
     res.status(500).json({
       success: false,
       error: "Failed to generate SQL query",
+      details: error.message,
     });
   }
 }
 
-export async function aiHelperConvert(
-  req: Request,
-  res: Response,
-): Promise<void> {
+export async function aiHelperConvert(req: Request, res: Response): Promise<void> {
   try {
-    const parsed = aiHelperSchema.parse(req.body);
-    const { prompt } = parsed;
+    const { query, prompt } = req.body;
 
-    // Simple AI conversion logic (you can integrate with actual AI service later)
-    const convertedRules = convertTextToRules(prompt);
-
-    res.json({
-      success: true,
-      data: {
-        rules: convertedRules,
-        originalPrompt: prompt,
-      },
-    });
-  } catch (error: any) {
-    console.error("Error converting AI prompt:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to convert AI prompt to rules",
-    });
-  }
-}
-
-export async function previewAudience(
-  req: Request,
-  res: Response,
-): Promise<void> {
-  try {
-    const parsed = previewAudienceSchema.parse(req.body);
-    const { rulesJson } = parsed;
-
-    // Parse the rules JSON
-    const rules = JSON.parse(rulesJson);
-
-    // Validate rules first
-    const validation = SqlEvaluator.validateRulesForSql(rules);
-    if (!validation.isValid) {
+    const validation = aiHelperSchema.safeParse({ query, prompt });
+    if (!validation.success) {
       res.status(400).json({
         success: false,
-        error: validation.error || "Invalid rules format",
+        error: "Invalid input data",
+        details: validation.error.issues,
       });
       return;
     }
 
-    const count = await SqlEvaluator.getAudienceCount(prisma, rules);
+    res.json({
+      success: true,
+      message: "AI helper conversion not yet implemented",
+      query,
+      prompt,
+    });
+  } catch (error: any) {
+    console.error("Error in AI helper conversion:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to process AI helper request",
+      details: error.message,
+    });
+  }
+}
+
+export async function previewAudience(req: Request, res: Response): Promise<void> {
+  try {
+    const { rulesJson, rules } = req.body;
+
+    const validation = previewAudienceSchema.safeParse({ rulesJson });
+    if (!validation.success) {
+      res.status(400).json({
+        success: false,
+        error: "Invalid input data",
+        details: validation.error.issues,
+      });
+      return;
+    }
+
+    const rulesToUse = rules || JSON.parse(rulesJson);
+    const sqlQuery = SqlEvaluator.rulesToSqlString(rulesToUse);
+
+    const previewQuery = `${sqlQuery} LIMIT 10`;
+    const customers = await prisma.$queryRawUnsafe(previewQuery);
+
+    const countQuery = `SELECT COUNT(*) as count FROM (${sqlQuery}) as subquery`;
+    const result = await prisma.$queryRawUnsafe(countQuery);
+    const totalCount = (result as any)[0]?.count || 0;
 
     res.json({
       success: true,
       data: {
-        count,
-        rules,
+        customers,
+        totalCount: parseInt(totalCount),
+        sqlQuery,
       },
     });
   } catch (error: any) {
@@ -411,95 +359,38 @@ export async function previewAudience(
     res.status(500).json({
       success: false,
       error: "Failed to preview audience",
+      details: error.message,
     });
   }
 }
 
-export async function getMatchingCustomers(
-  req: Request,
-  res: Response,
-): Promise<void> {
+export async function getMatchingCustomers(req: Request, res: Response): Promise<void> {
   try {
     const { rules } = req.body;
-    const { page = 1, limit = 10 } = req.query;
 
-    // Validate rules first
-    const validation = SqlEvaluator.validateRulesForSql(rules);
-    if (!validation.isValid) {
+    if (!rules) {
       res.status(400).json({
         success: false,
-        error: validation.error || "Invalid rules format",
+        error: "Rules are required",
       });
       return;
     }
 
-    const result = await SqlEvaluator.getAudience(
-      prisma,
-      rules,
-      Number(page),
-      Number(limit),
-    );
+    const sqlQuery = SqlEvaluator.rulesToSqlString(rules);
+
+    const customers = await prisma.$queryRawUnsafe(sqlQuery);
 
     res.json({
       success: true,
-      data: result,
+      data: customers,
+      sqlQuery,
     });
   } catch (error: any) {
     console.error("Error getting matching customers:", error);
     res.status(500).json({
       success: false,
       error: "Failed to get matching customers",
+      details: error.message,
     });
   }
-}
-
-// Helper function to convert text prompts to rules
-function convertTextToRules(prompt: string): any {
-  const lowerPrompt = prompt.toLowerCase();
-
-  // Simple pattern matching for common phrases
-  if (lowerPrompt.includes("visits") && lowerPrompt.includes(">")) {
-    const match = prompt.match(/>\s*(\d+)/);
-    if (match) {
-      return {
-        field: "visits_count",
-        operator: ">",
-        value: parseInt(match[1]),
-      };
-    }
-  }
-
-  if (lowerPrompt.includes("spent") || lowerPrompt.includes("spend")) {
-    const amountMatch = prompt.match(/(\d+(?:,\d{3})*(?:\.\d{2})?)/);
-    if (amountMatch) {
-      const amount = parseFloat(amountMatch[1].replace(/,/g, ""));
-      return {
-        field: "total_spend",
-        operator:
-          lowerPrompt.includes("more") || lowerPrompt.includes(">") ? ">" : "<",
-        value: amount,
-      };
-    }
-  }
-
-  if (lowerPrompt.includes("inactive") && lowerPrompt.includes("month")) {
-    const monthMatch = prompt.match(/(\d+)\s*month/);
-    if (monthMatch) {
-      const months = parseInt(monthMatch[1]);
-      const cutoffDate = new Date();
-      cutoffDate.setMonth(cutoffDate.getMonth() - months);
-      return {
-        field: "last_active",
-        operator: "<",
-        value: cutoffDate.toISOString().split("T")[0],
-      };
-    }
-  }
-
-  // Default fallback
-  return {
-    field: "total_spend",
-    operator: ">",
-    value: 0,
-  };
 }

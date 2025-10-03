@@ -8,73 +8,64 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { specs, swaggerUi } from './swagger';
 
-// Load environment variables
 dotenv.config();
 
-// Auto-fix database on startup (for free tier without shell access)
 async function runAutoFix() {
   try {
     if (process.env.NODE_ENV === 'production') {
-      console.log('🔧 Running automatic database fix...');
+      console.log('Running automatic database fix...');
       const { autoFixDatabase } = require('../auto-fix-startup.js');
       const success = await autoFixDatabase();
       if (success) {
-        console.log('✅ Database auto-fix completed successfully');
+        console.log('Database auto-fix completed successfully');
       } else {
-        console.log('⚠️  Database auto-fix had issues, but continuing...');
+        console.log('Database auto-fix had issues, but continuing...');
       }
     } else {
-      console.log('🔧 Development mode: Skipping auto-fix');
+      console.log('Development mode: Skipping auto-fix');
     }
   } catch (error: any) {
-    console.log('⚠️  Database auto-fix failed, but continuing:', error.message);
+    console.log('Database auto-fix failed, but continuing:', error.message);
   }
 }
 
-// Validate required environment variables
 if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL environment variable is required but not set!');
+  console.error('DATABASE_URL environment variable is required but not set!');
   console.error('   Please set DATABASE_URL in your environment variables.');
   console.error('   Format: postgresql://username:password@host:port/database_name');
   process.exit(1);
 }
 
-// Validate DATABASE_URL format (allow SQLite for local development)
 if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL.startsWith('postgresql://') && !process.env.DATABASE_URL.startsWith('postgres://')) {
-  console.error('❌ DATABASE_URL must be a PostgreSQL connection string in production!');
+  console.error('DATABASE_URL must be a PostgreSQL connection string in production!');
   console.error('   Current value:', process.env.DATABASE_URL);
   console.error('   Expected format: postgresql://username:password@host:port/database_name');
   process.exit(1);
 }
 
 if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 Development mode: Using local database');
+  console.log('Development mode: Using local database');
   console.log('   Database URL:', process.env.DATABASE_URL);
 }
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Security middleware
 app.use(helmet());
 
-// CORS configuration with proper origin validation
 const allowedOrigins = [
   'http://localhost:3000',
   'https://mini-crm-platform-psi.vercel.app'
 ];
 
-// Add environment variable origins if they exist and are valid
 if (process.env.FRONTEND_URL && typeof process.env.FRONTEND_URL === 'string') {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
-// Filter out any undefined values
 const validOrigins = allowedOrigins.filter(origin => origin && typeof origin === 'string');
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
     if (validOrigins.includes(origin)) {
@@ -90,14 +81,12 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100
 });
 app.use(limiter);
 
-// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -110,30 +99,6 @@ app.use(compression());
 // Logging middleware
 app.use(morgan('combined'));
 
-/**
- * @swagger
- * /health:
- *   get:
- *     summary: Health check endpoint
- *     tags: [System]
- *     responses:
- *       200:
- *         description: Service is healthy
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: OK
- *                 timestamp:
- *                   type: string
- *                   format: date-time
- *                 uptime:
- *                   type: number
- *                   description: Server uptime in seconds
- */
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
@@ -142,9 +107,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Health check with authorization status
 app.get('/health/auth', (req, res) => {
-  // Always return authorized = true
   res.status(200).json({ 
     status: 'OK',
     authorized: true,
@@ -160,9 +123,7 @@ app.get('/health/auth', (req, res) => {
   });
 });
 
-// Comprehensive status endpoint
 app.get('/status', (req, res) => {
-  // Always return authorized = true
   res.status(200).json({
     status: 'OK',
     service: 'XenoCRM Backend',
@@ -197,7 +158,6 @@ app.get('/status', (req, res) => {
   });
 });
 
-// CORS test endpoint
 app.get('/cors-test', (req, res) => {
   res.json({
     message: 'CORS is working!',
@@ -206,7 +166,6 @@ app.get('/cors-test', (req, res) => {
   });
 });
 
-// Test OAuth endpoint
 app.get('/api/oauth/test', (req, res) => {
   const redirectUri = `${process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com'}/api/oauth/google/callback`;
   
@@ -226,35 +185,6 @@ app.get('/api/oauth/test', (req, res) => {
   });
 });
 
-/**
- * @swagger
- * /api/auth/me:
- *   get:
- *     summary: Get current authenticated user
- *     description: Returns the current user information based on authentication cookies
- *     tags: [Authentication]
- *     security:
- *       - cookieAuth: []
- *     responses:
- *       200:
- *         description: User information retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *       401:
- *         description: Not authenticated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
 app.get('/api/auth/me', (req, res) => {
   try {
     const isAuthenticated = req.cookies.isAuthenticated;
@@ -267,7 +197,6 @@ app.get('/api/auth/me', (req, res) => {
       });
     }
 
-    // Parse user info from cookie
     const userInfo = JSON.parse(userInfoCookie);
     
     return res.json({
@@ -277,7 +206,6 @@ app.get('/api/auth/me', (req, res) => {
   } catch (error) {
     console.error('Auth verification error:', error);
     
-    // Clear invalid cookies
     res.clearCookie('isAuthenticated', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -299,37 +227,8 @@ app.get('/api/auth/me', (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/auth/logout:
- *   post:
- *     summary: Logout user
- *     description: Clears authentication cookies and logs out the user
- *     tags: [Authentication]
- *     responses:
- *       200:
- *         description: Logout successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Logged out successfully
- *       500:
- *         description: Logout failed
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
 app.post('/api/auth/logout', (req, res) => {
   try {
-    // Clear the authentication cookies
     res.clearCookie('isAuthenticated', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -357,30 +256,12 @@ app.post('/api/auth/logout', (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/oauth/google:
- *   get:
- *     summary: Initiate Google OAuth login
- *     description: Redirects to Google OAuth for authentication
- *     tags: [Authentication]
- *     responses:
- *       302:
- *         description: Redirect to Google OAuth
- *       500:
- *         description: Error generating OAuth URL
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
 app.get('/api/oauth/google', (req, res) => {
   try {
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;
     const BACKEND_URL = (process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com').trim();
     const redirectUri = `${BACKEND_URL}/api/oauth/google/callback`;
     
-    // Use more specific scopes and remove problematic parameters
     const scope = 'email profile';
     const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     
@@ -393,8 +274,7 @@ app.get('/api/oauth/google', (req, res) => {
       `access_type=online&` +
       `include_granted_scopes=true`;
 
-    // Debug logging
-    console.log('🔍 Direct OAuth Debug Info:');
+    console.log('Direct OAuth Debug Info:');
     console.log('BACKEND_URL:', JSON.stringify(BACKEND_URL));
     console.log('redirectUri:', JSON.stringify(redirectUri));
     console.log('GOOGLE_CLIENT_ID:', !!GOOGLE_CLIENT_ID);
@@ -412,7 +292,6 @@ app.get('/api/oauth/google', (req, res) => {
   }
 });
 
-// Google OAuth URL endpoint (for JSON response)
 app.get('/api/oauth/google/url', (req, res) => {
   try {
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;
@@ -420,13 +299,11 @@ app.get('/api/oauth/google/url', (req, res) => {
     const BACKEND_URL = (process.env.BACKEND_URL || 'https://mini-crm-platform-tnsk.onrender.com').trim();
     const redirectUri = `${BACKEND_URL}/api/oauth/google/callback`;
     
-    // Debug logging
-    console.log('🔍 OAuth Debug Info:');
+    console.log('OAuth Debug Info:');
     console.log('FRONTEND_URL:', JSON.stringify(FRONTEND_URL));
     console.log('redirectUri:', JSON.stringify(redirectUri));
     console.log('GOOGLE_CLIENT_ID:', !!GOOGLE_CLIENT_ID);
     
-    // Use more specific scopes and remove problematic parameters
     const scope = 'email profile';
     const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     
@@ -454,9 +331,7 @@ app.get('/api/oauth/google/url', (req, res) => {
   }
 });
 
-// Import Swagger setup
 
-// Import routes
 import authRoutes from './routes/auth';
 import googleAuthRoutes from './routes/googleAuth.routes';
 import customersRoutes from './routes/customers.routes';
@@ -467,23 +342,18 @@ import deliveryReceiptRoutes from './routes/deliveryReceipt.routes';
 import aiRoutes from './routes/ai.routes';
 import vendorRoutes from './routes/vendor';
 
-// Import workers
-// import './workers/campaign.worker';
 
-// Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
   explorer: true,
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'XenoCRM API Documentation'
 }));
 
-// Swagger JSON endpoint
 app.get('/api-docs.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(specs);
 });
 
-// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/oauth', googleAuthRoutes);
 app.use('/api/customers', customersRoutes);
@@ -493,10 +363,7 @@ app.use('/api/campaigns', campaignsRoutes);
 app.use('/api/delivery-receipt', deliveryReceiptRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/vendor', vendorRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/contacts', contactRoutes);
 
-// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ 
     error: 'Route not found',
@@ -504,7 +371,6 @@ app.use('*', (req, res) => {
   });
 });
 
-// Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ 
@@ -513,14 +379,12 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Start server with auto-fix
 async function startServer() {
-  // Run auto-fix before starting server
   await runAutoFix();
   
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/health`);
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
   });
 }
 

@@ -23,15 +23,10 @@ export interface MessageSuggestion {
 }
 
 export class AIService {
-  /**
-   * Generate AI-powered message suggestions based on campaign context
-   */
   static async generateMessageSuggestions(request: MessageSuggestionRequest): Promise<MessageSuggestion[]> {
     try {
       const { objective, audienceAttributes, campaignType = 'promotional', tone = 'friendly' } = request;
       
-      // For now, we'll use a rule-based approach to generate suggestions
-      // In a real implementation, this would integrate with OpenAI, Claude, or similar AI service
       const suggestions = this.generateRuleBasedSuggestions(objective, audienceAttributes, campaignType, tone);
       
       return suggestions;
@@ -41,10 +36,6 @@ export class AIService {
     }
   }
 
-  /**
-   * Rule-based message generation (placeholder for AI integration)
-   * In production, this would call an external AI service
-   */
   private static generateRuleBasedSuggestions(
     objective: string,
     audienceAttributes?: MessageSuggestionRequest['audienceAttributes'],

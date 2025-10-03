@@ -10,7 +10,6 @@ export async function createCustomer(req: Request, res: Response) {
   try {
     const parsed = customerSchema.parse(req.body);
     
-    // For testing without Redis, create customer directly
     const customer = await prisma.customer.upsert({
       where: { email: parsed.email },
       update: {
